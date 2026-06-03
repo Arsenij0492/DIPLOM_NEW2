@@ -1,0 +1,455 @@
+/* bank-style.css - Современный банковский дизайн */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e8ecef 100%);
+    color: #1a1f36;
+    line-height: 1.5;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Контейнер */
+.bank-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 32px;
+}
+
+/* Шапка - современная */
+.bank-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.logo-area h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0047AB, #0052CC);
+    -webkit-background-clip: text;
+    background-clip: text;           /* Стандартное свойство */
+    -webkit-text-fill-color: transparent;
+    color: transparent;              /* Fallback для старых браузеров */
+    letter-spacing: -0.5px;
+}
+
+.logo-area p {
+    font-size: 12px;
+    color: #6c7a8e;
+    margin-top: 4px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 4px 12px 4px 8px;
+    border-radius: 40px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    border: 1px solid #e0e4e8;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.user-card:hover {
+    border-color: #0047AB;
+    background: #f8f9fa;
+}
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #0047AB, #0052CC);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.user-info-header {
+    text-align: left;
+}
+
+.user-name-header {
+    font-weight: 500;
+    font-size: 12px;
+    color: #1a1f36;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-role-header {
+    font-size: 9px;
+    color: #6c7a8e;
+}
+
+.btn-gosuslugi {
+    background: #0066FF;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-weight: 500;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-gosuslugi:hover {
+    background: #0052CC;
+    transform: translateY(-1px);
+}
+
+.btn-icon {
+    background: transparent;
+    border: 1px solid #e0e4e8;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #1a1f36;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-icon:hover {
+    background: #f0f2f5;
+    border-color: #0047AB;
+}
+
+.btn-outline-bank {
+    background: transparent;
+    border: 1px solid #e0e4e8;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #1a1f36;
+}
+
+.btn-outline-bank:hover {
+    background: #f0f2f5;
+    border-color: #0047AB;
+}
+
+.btn-primary-bank {
+    background: linear-gradient(135deg, #0047AB, #0052CC);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 100px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.btn-primary-bank:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,71,171,0.3);
+}
+
+/* Статистика */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card-bank {
+    background: white;
+    padding: 20px 24px;
+    border-radius: 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    transition: all 0.2s;
+}
+
+.stat-card-bank:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: #0047AB;
+    margin-bottom: 8px;
+}
+
+.stat-label-bank {
+    font-size: 13px;
+    color: #6c7a8e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Документы */
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 48px;
+}
+
+.document-card-bank {
+    background: white;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    transition: all 0.2s;
+}
+
+.document-card-bank:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.document-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #1a1f36;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-badge-bank {
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-pending {
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+.status-approved {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+/* Форма */
+.form-row-bank {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group-bank {
+    flex: 1;
+    margin-bottom: 16px;
+}
+
+.form-group-bank label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6c7a8e;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.form-control-bank {
+    width: 100%;
+    padding: 12px 0;
+    font-size: 15px;
+    border: none;
+    border-bottom: 2px solid #e0e4e8;
+    background: transparent;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.form-control-bank:focus {
+    outline: none;
+    border-bottom-color: #0047AB;
+}
+
+/* Заявки */
+.applications-section {
+    margin-top: 40px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #1a1f36;
+}
+
+.applications-grid-bank {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.application-item {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    transition: all 0.2s;
+    border: 1px solid #f0f2f5;
+}
+
+.application-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.app-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f2f5;
+}
+
+.app-label {
+    font-size: 13px;
+    color: #6c7a8e;
+}
+
+.app-value {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Загрузчик */
+.bank-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.bank-loader.active {
+    display: flex;
+}
+
+.loader-spinner-bank {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #e0e4e8;
+    border-top-color: #0047AB;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.loader-text-bank {
+    font-size: 14px;
+    color: #6c7a8e;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Пустое состояние */
+.empty-state-bank {
+    background: white;
+    border-radius: 24px;
+    padding: 60px;
+    text-align: center;
+    color: #6c7a8e;
+}
+
+.empty-state-bank p {
+    margin-bottom: 20px;
+}
+
+/* Адаптив */
+@media (max-width: 900px) {
+    .bank-container { padding: 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .documents-grid { grid-template-columns: 1fr; }
+    .bank-header { flex-direction: column; gap: 16px; text-align: center; }
+    .header-actions { flex-wrap: wrap; justify-content: center; }
+}
+
+@media (max-width: 600px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .form-row-bank { flex-direction: column; gap: 0; }
+}
+/* Добавить в конец файла bank-style.css */
+
+/* Скелетон загрузки */
+.skeleton {
+    background: linear-gradient(90deg, #f0f2f5 25%, #e0e4e8 50%, #f0f2f5 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 12px;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton-text {
+    height: 16px;
+    width: 100%;
+    margin: 8px 0;
+}
+
+.skeleton-card {
+    height: 120px;
+    width: 100%;
+    border-radius: 20px;
+}
+
+.stat-skeleton {
+    height: 80px;
+    border-radius: 20px;
+}
+
+.doc-skeleton {
+    height: 200px;
+    border-radius: 24px;
+}
