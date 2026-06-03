@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0c10; color: #fff; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #2a2f3a;
+        }
+        .logo h1 { font-size: 22px; }
+        .logo p { font-size: 13px; color: #8e95a5; margin-top: 4px; }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #2a2f3a;
+            padding: 8px 20px;
+            border-radius: 6px;
+            color: #8e95a5;
+            cursor: pointer;
+        }
+        .tabs { display: flex; gap: 8px; margin-bottom: 32px; border-bottom: 1px solid #2a2f3a; }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 12px 24px;
+            font-size: 13px;
+            color: #8e95a5;
+            cursor: pointer;
+        }
+        .tab-btn.active { color: #2d6dd0; border-bottom: 2px solid #2d6dd0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .filters-bar { display: flex; gap: 16px; margin-bottom: 32px; }
+        .filter-input {
+            background: #13161c;
+            border: 1px solid #2a2f3a;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #fff;
+            flex: 1;
+        }
+        .btn-primary {
+            background: #2d6dd0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .data-table {
+            background: #13161c;
+            border-radius: 12px;
+            overflow-x: auto;
+            border: 1px solid #2a2f3a;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 20px; text-align: left; border-bottom: 1px solid #2a2f3a; }
+        th { background: #1a1f2a; color: #8e95a5; font-size: 12px; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; }
+        .status-active { background: rgba(42,138,92,0.15); color: #2a8a5c; }
+        .status-blocked { background: rgba(194,58,58,0.15); color: #c23a3a; }
+        .action-btn {
+            background: transparent;
+            border: 1px solid #2a2f3a;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #8e95a5;
+            cursor: pointer;
+            margin: 0 2px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: #13161c;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            padding: 28px;
+        }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .modal-close { background: none; border: none; font-size: 24px; color: #8e95a5; cursor: pointer; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; color: #8e95a5; margin-bottom: 6px; }
+        .form-control {
+            width: 100%;
+            background: #0a0c10;
+            border: 1px solid #2a2f3a;
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .loading { text-align: center; padding: 60px; color: #8e95a5; }
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #1a1f2a;
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            z-index: 9999;
+            border: 1px solid #2a2f3a;
+        }
+        .debug-panel.error { background: #7f1a1a; color: #ffaaaa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><h1>KUBAN CREDIT</h1><p>Панель администратора</p></div>
+            <button class="logout-btn" id="logoutBtn">Выход</button>
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="specialists">Специалисты</button>
+            <button class="tab-btn" data-tab="clients">Клиенты</button>
+        </div>
+        
+        <div id="tab-specialists" class="tab-content active">
+            <div class="filters-bar">
+                <input type="text" id="specialistSearch" class="filter-input" placeholder="Поиск...">
+                <button class="btn-primary" id="addSpecialistBtn">+ Добавить специалиста</button>
+            </div>
+            <div class="data-table">
+                <table><thead><tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Телефон</th><th>Статус</th><th>Действия</th></tr></thead>
+                <tbody id="specialistsBody"><tr><td colspan="6" class="loading">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+        
+        <div id="tab-clients" class="tab-content">
+            <div class="filters-bar"><input type="text" id="clientSearch" class="filter-input" placeholder="Поиск..."></div>
+            <div class="data-table">
+                <table><thead><tr><th>ID</th><th>Логин</th><th>ФИО</th><th>Статус</th><th>Действия</th></tr></thead>
+                <tbody id="clientsBody"><tr><td colspan="5" class="loading">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Добавить специалиста</h2><button class="modal-close" onclick="closeModal()">×</button></div>
+            <div class="form-group"><label>Логин</label><input type="text" id="newLogin" class="form-control"></div>
+            <div class="form-group"><label>Пароль</label><input type="password" id="newPassword" class="form-control"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Фамилия</label><input type="text" id="newLastName" class="form-control"></div>
+                <div class="form-group"><label>Имя</label><input type="text" id="newFirstName" class="form-control"></div>
+            </div>
+            <div class="form-group"><label>Телефон</label><input type="text" id="newPhone" class="form-control"></div>
+            <button class="btn-primary" style="width:100%" onclick="createSpecialist()">Создать</button>
+        </div>
+    </div>
+
+    <div class="debug-panel" id="debugPanel">🔍 Ожидание...</div>
+
+    <script>
+        (function() {
+            const SUPABASE_URL = 'https://azpfhcmpamkaebghlwah.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6cGZoY21wYW1rYWViZ2hsd2FoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTg1MjQwNSwiZXhwIjoyMDg3NDI4NDA1fQ.CaCszo_Qh3k4M0C4c_HFnhViJCpJcqUPYpAE61VE_j8';
+            
+            let _supabase = null;
+            let allSpecialists = [];
+            let allClients = [];
+            
+            function debug(msg, type = 'info') {
+                const panel = document.getElementById('debugPanel');
+                if (panel) {
+                    panel.innerHTML = `🔍 ${msg}`;
+                    panel.className = type === 'error' ? 'debug-panel error' : 'debug-panel';
+                    console.log(`[DEBUG] ${msg}`);
+                }
+            }
+            
+            function getSupabase() {
+                if (!_supabase && window.supabase) {
+                    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    debug('Supabase клиент создан');
+                }
+                return _supabase;
+            }
+            
+            function escapeHtml(s) { if (!s) return ''; return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
+            
+            async function loadSpecialists() {
+                debug('Загрузка специалистов...');
+                const sb = getSupabase();
+                const { data, error } = await sb.from('specialists').select('*').order('created_at', { ascending: false });
+                if (error) { debug(`Ошибка: ${error.message}`, 'error'); return; }
+                allSpecialists = data || [];
+                renderSpecialists();
+                debug(`Загружено ${allSpecialists.length} специалистов`);
+            }
+            
+            async function loadClients() {
+                debug('Загрузка клиентов...');
+                const sb = getSupabase();
+                const { data, error } = await sb.from('users').select('*').eq('role', 'client').order('created_at', { ascending: false });
+                if (error) { debug(`Ошибка: ${error.message}`, 'error'); return; }
+                allClients = data || [];
+                renderClients();
+                debug(`Загружено ${allClients.length} клиентов`);
+            }
+            
+            function renderSpecialists() {
+                const search = document.getElementById('specialistSearch')?.value.toLowerCase() || '';
+                const filtered = allSpecialists.filter(s => !search || (s.login || '').toLowerCase().includes(search) || (s.full_name || '').toLowerCase().includes(search));
+                const tbody = document.getElementById('specialistsBody');
+                if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" class="loading">Нет специалистов</td></tr>'; return; }
+                tbody.innerHTML = filtered.map(s => `
+                    <tr>
+                        <td>${s.id.slice(0,8)}</td>
+                        <td><strong>${escapeHtml(s.login)}</strong></td>
+                        <td>${escapeHtml(s.full_name || '—')}</td>
+                        <td>${escapeHtml(s.phone || '—')}</td>
+                        <td><span class="status-badge ${s.status === 'active' ? 'status-active' : 'status-blocked'}">${s.status === 'active' ? 'Активен' : 'Заблокирован'}</span></td>
+                        <td>
+                            <button class="action-btn" onclick="toggleSpecialistStatus('${s.id}', '${s.status}')">${s.status === 'active' ? 'Блокировать' : 'Разблокировать'}</button>
+                            <button class="action-btn" onclick="deleteSpecialist('${s.id}')">Удалить</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            function renderClients() {
+                const search = document.getElementById('clientSearch')?.value.toLowerCase() || '';
+                const filtered = allClients.filter(c => !search || (c.email || '').toLowerCase().includes(search) || `${c.last_name||''} ${c.first_name||''}`.toLowerCase().includes(search));
+                const tbody = document.getElementById('clientsBody');
+                if (!filtered.length) { tbody.innerHTML = '<td><td colspan="5" class="loading">Нет клиентов</td></tr>'; return; }
+                tbody.innerHTML = filtered.map(c => `
+                    <tr>
+                        <td>${c.id.slice(0,8)}</td>
+                        <td><strong>${escapeHtml(c.email || '—')}</strong></td>
+                        <td>${escapeHtml(`${c.last_name||''} ${c.first_name||''}`.trim() || '—')}</td>
+                        <td><span class="status-badge ${c.status === 'active' ? 'status-active' : 'status-blocked'}">${c.status === 'active' ? 'Активен' : 'Заблокирован'}</span></td>
+                        <td><button class="action-btn" onclick="toggleClientStatus('${c.id}', '${c.status}')">${c.status === 'active' ? 'Блокировать' : 'Разблокировать'}</button></td>
+                    </tr>
+                `).join('');
+            }
+            
+            window.toggleSpecialistStatus = async (id, current) => {
+                const newStatus = current === 'active' ? 'blocked' : 'active';
+                const sb = getSupabase();
+                await sb.from('specialists').update({ status: newStatus }).eq('id', id);
+                loadSpecialists();
+            };
+            
+            window.deleteSpecialist = async (id) => {
+                if (!confirm('Удалить специалиста?')) return;
+                const sb = getSupabase();
+                await sb.from('specialists').delete().eq('id', id);
+                loadSpecialists();
+            };
+            
+            window.toggleClientStatus = async (id, current) => {
+                const newStatus = current === 'active' ? 'blocked' : 'active';
+                const sb = getSupabase();
+                await sb.from('users').update({ status: newStatus }).eq('id', id);
+                loadClients();
+            };
+            
+            window.createSpecialist = async () => {
+                const login = document.getElementById('newLogin').value.trim();
+                const password = document.getElementById('newPassword').value.trim();
+                const firstName = document.getElementById('newFirstName').value.trim();
+                const lastName = document.getElementById('newLastName').value.trim();
+                const phone = document.getElementById('newPhone').value.trim();
+                const fullName = `${lastName} ${firstName}`.trim();
+                
+                debug(`Создание специалиста: логин=${login}, имя=${fullName}`);
+                
+                if (!login || !password) {
+                    alert('Заполните логин и пароль');
+                    debug('Ошибка: пустые логин или пароль', 'error');
+                    return;
+                }
+                
+                const sb = getSupabase();
+                const { data: existing } = await sb.from('specialists').select('id').eq('login', login).maybeSingle();
+                if (existing) {
+                    alert('Специалист с таким логином уже существует');
+                    debug('Ошибка: логин уже занят', 'error');
+                    return;
+                }
+                
+                const { error } = await sb.from('specialists').insert([{
+                    login: login,
+                    password: password,
+                    full_name: fullName,
+                    phone: phone,
+                    status: 'active'
+                }]);
+                
+                if (error) {
+                    debug(`Ошибка создания: ${error.message}`, 'error');
+                    alert('Ошибка: ' + error.message);
+                } else {
+                    debug('Специалист успешно создан');
+                    alert('✅ Специалист создан');
+                    closeModal();
+                    loadSpecialists();
+                }
+            };
+            
+            function closeModal() {
+                document.getElementById('addModal').classList.remove('active');
+                document.getElementById('newLogin').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('newFirstName').value = '';
+                document.getElementById('newLastName').value = '';
+                document.getElementById('newPhone').value = '';
+            }
+            
+            document.getElementById('addSpecialistBtn').onclick = () => document.getElementById('addModal').classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+                    if (btn.dataset.tab === 'specialists') loadSpecialists();
+                    if (btn.dataset.tab === 'clients') loadClients();
+                };
+            });
+            document.getElementById('specialistSearch').addEventListener('input', () => renderSpecialists());
+            document.getElementById('clientSearch').addEventListener('input', () => renderClients());
+            document.getElementById('logoutBtn').onclick = () => window.location.href = 'index.html';
+            
+            getSupabase();
+            loadSpecialists();
+            loadClients();
+        })();
+    </script>
+</body>
+</html>

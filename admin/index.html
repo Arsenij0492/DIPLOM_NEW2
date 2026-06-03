@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0c10;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: #13161c;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #2a2f3a;
+        }
+        .logo { text-align: center; margin-bottom: 32px; }
+        .logo h1 { font-size: 24px; color: #fff; }
+        .logo p { color: #8e95a5; font-size: 13px; }
+        .role-select { margin-bottom: 32px; }
+        .role-label { display: block; font-size: 12px; color: #8e95a5; margin-bottom: 8px; }
+        .role-dropdown {
+            width: 100%;
+            background: #0a0c10;
+            border: 1px solid #2a2f3a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; color: #8e95a5; margin-bottom: 8px; }
+        .form-control {
+            width: 100%;
+            background: #0a0c10;
+            border: 1px solid #2a2f3a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        .login-btn {
+            width: 100%;
+            background: #2d6dd0;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .error-msg { color: #c23a3a; font-size: 13px; text-align: center; margin-top: 16px; }
+        .debug-panel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #1a1f2a;
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            z-index: 9999;
+            max-width: 350px;
+            border: 1px solid #2a2f3a;
+        }
+        .debug-panel.error { background: #7f1a1a; color: #ffaaaa; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo"><h1>KUBAN CREDIT</h1><p>Вход в систему</p></div>
+        
+        <div class="role-select">
+            <label class="role-label">Роль</label>
+            <select id="roleSelect" class="role-dropdown">
+                <option value="admin">Администратор</option>
+                <option value="specialist">Специалист</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Логин</label>
+            <input type="text" id="login" class="form-control" placeholder="Введите логин">
+        </div>
+        
+        <div class="form-group">
+            <label>Пароль</label>
+            <input type="password" id="password" class="form-control" placeholder="Введите пароль">
+        </div>
+        
+        <button class="login-btn" id="loginBtn">Войти</button>
+        <div id="errorMsg" class="error-msg"></div>
+    </div>
+
+    <div class="debug-panel" id="debugPanel">🔍 Ожидание входа...</div>
+
+    <script>
+        (function() {
+            const SUPABASE_URL = 'https://azpfhcmpamkaebghlwah.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6cGZoY21wYW1rYWViZ2hsd2FoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTg1MjQwNSwiZXhwIjoyMDg3NDI4NDA1fQ.CaCszo_Qh3k4M0C4c_HFnhViJCpJcqUPYpAE61VE_j8';
+            
+            let _supabase = null;
+            const ADMIN = { login: 'admin', password: 'admin123' };
+            
+            function debug(msg, type = 'info') {
+                const panel = document.getElementById('debugPanel');
+                if (panel) {
+                    panel.innerHTML = `🔍 ${msg}`;
+                    panel.className = type === 'error' ? 'debug-panel error' : 'debug-panel';
+                    console.log(`[DEBUG] ${msg}`);
+                }
+            }
+            
+            function getSupabase() {
+                if (!_supabase && window.supabase) {
+                    _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    debug('Supabase клиент создан');
+                }
+                return _supabase;
+            }
+            
+            async function handleLogin() {
+                const login = document.getElementById('login').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const role = document.getElementById('roleSelect').value;
+                const errorDiv = document.getElementById('errorMsg');
+                
+                debug(`Попытка входа: роль=${role}, логин=${login}`);
+                
+                if (!login || !password) {
+                    errorDiv.textContent = 'Заполните все поля';
+                    debug('Ошибка: пустые поля', 'error');
+                    return;
+                }
+                
+                // Админ
+                if (role === 'admin') {
+                    debug('Проверка администратора...');
+                    if (login === ADMIN.login && password === ADMIN.password) {
+                        debug('Админ авторизован, переход на admin-dashboard.html');
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        errorDiv.textContent = 'Неверный логин или пароль администратора';
+                        debug('Ошибка: неверные данные админа', 'error');
+                    }
+                    return;
+                }
+                
+                // Специалист
+                if (role === 'specialist') {
+                    debug('Проверка специалиста через Supabase...');
+                    const supabase = getSupabase();
+                    if (!supabase) {
+                        errorDiv.textContent = 'Ошибка подключения к Supabase';
+                        debug('Ошибка: Supabase не инициализирован', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        debug(`Запрос к таблице specialists: login=${login}`);
+                        const { data, error } = await supabase
+                            .from('specialists')
+                            .select('*')
+                            .eq('login', login)
+                            .eq('password', password)
+                            .eq('status', 'active')
+                            .maybeSingle();
+                        
+                        if (error) {
+                            debug(`Ошибка запроса: ${error.message}`, 'error');
+                            errorDiv.textContent = 'Ошибка сервера: ' + error.message;
+                            return;
+                        }
+                        
+                        if (!data) {
+                            debug('Специалист не найден или не активен', 'error');
+                            errorDiv.textContent = 'Неверный логин, пароль или специалист заблокирован';
+                            return;
+                        }
+                        
+                        debug(`Специалист найден: ${data.login}, переход на specialist-dashboard.html`);
+                        sessionStorage.setItem('specialist', JSON.stringify(data));
+                        window.location.href = 'specialist-dashboard.html';
+                        
+                    } catch (err) {
+                        debug(`Критическая ошибка: ${err.message}`, 'error');
+                        errorDiv.textContent = 'Ошибка соединения с сервером';
+                    }
+                }
+            }
+            
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+            document.getElementById('login').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+            
+            debug('Страница загружена, ожидание ввода');
+            getSupabase();
+        })();
+    </script>
+</body>
+</html>
