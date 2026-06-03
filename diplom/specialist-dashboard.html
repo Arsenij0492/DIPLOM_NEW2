@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Специалист | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0c10; color: #fff; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px 32px; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #2a2f3a;
+        }
+        .logo h1 { font-size: 22px; }
+        .logo p { font-size: 13px; color: #8e95a5; margin-top: 4px; }
+        .user-info { font-size: 13px; color: #8e95a5; }
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #2a2f3a;
+            padding: 8px 20px;
+            border-radius: 6px;
+            color: #8e95a5;
+            cursor: pointer;
+            margin-left: 16px;
+        }
+        .stats-row { display: flex; gap: 24px; margin-bottom: 32px; }
+        .stat-card {
+            background: #13161c;
+            border: 1px solid #2a2f3a;
+            border-radius: 12px;
+            padding: 20px 32px;
+            flex: 1;
+        }
+        .stat-value { font-size: 32px; font-weight: 700; color: #2d6dd0; }
+        .stat-label { font-size: 12px; color: #8e95a5; margin-top: 4px; }
+        .filters-bar { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+        .filter-select, .filter-input {
+            background: #13161c;
+            border: 1px solid #2a2f3a;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+        }
+        .filter-input { flex: 1; min-width: 250px; }
+        .data-table {
+            background: #13161c;
+            border-radius: 12px;
+            overflow-x: auto;
+            border: 1px solid #2a2f3a;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 20px; text-align: left; border-bottom: 1px solid #2a2f3a; }
+        th { background: #1a1f2a; color: #8e95a5; font-size: 12px; }
+        tr:hover { background: #1a1f2a; cursor: pointer; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .status-submitted { background: rgba(45,109,208,0.15); color: #2d6dd0; }
+        .status-approved { background: rgba(42,138,92,0.15); color: #2a8a5c; }
+        .status-rejected { background: rgba(194,58,58,0.15); color: #c23a3a; }
+        .status-need_docs { background: rgba(201,138,42,0.15); color: #c98a2a; }
+        .loading { text-align: center; padding: 60px; color: #8e95a5; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: #13161c;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 28px;
+            border-bottom: 1px solid #2a2f3a;
+        }
+        .modal-close { background: none; border: none; font-size: 24px; color: #8e95a5; cursor: pointer; }
+        .modal-body { padding: 28px; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            background: #1a1f2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .info-row { display: flex; justify-content: space-between; }
+        .info-label { color: #8e95a5; font-size: 13px; }
+        .info-value { font-weight: 500; }
+        .status-control { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .status-select {
+            background: #0a0c10;
+            border: 1px solid #2a2f3a;
+            padding: 10px 16px;
+            border-radius: 8px;
+            color: #fff;
+            min-width: 200px;
+        }
+        .btn-primary {
+            background: #2d6dd0;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .btn-danger {
+            background: #c23a3a;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+        .chat-messages {
+            background: #1a1f2a;
+            border-radius: 12px;
+            padding: 16px;
+            height: 250px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+        .chat-message {
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            max-width: 75%;
+            font-size: 13px;
+        }
+        .chat-message.admin { background: #2d6dd0; color: white; margin-left: auto; }
+        .chat-message.client { background: #0a0c10; border: 1px solid #2a2f3a; }
+        .message-time { font-size: 10px; opacity: 0.6; margin-top: 4px; }
+        .chat-input-area { display: flex; gap: 12px; }
+        .chat-input {
+            flex: 1;
+            background: #0a0c10;
+            border: 1px solid #2a2f3a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+        }
+        .chat-send {
+            background: #2d6dd0;
+            border: none;
+            padding: 0 24px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <h1>KUBAN CREDIT</h1>
+                <p>Панель специалиста</p>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <div class="user-info" id="userInfo">Загрузка...</div>
+                <button class="logout-btn" id="logoutBtn">Выход</button>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-value" id="totalCount">0</div><div class="stat-label">Всего заявок</div></div>
+            <div class="stat-card"><div class="stat-value" id="pendingCount">0</div><div class="stat-label">В работе</div></div>
+            <div class="stat-card"><div class="stat-value" id="approvedCount">0</div><div class="stat-label">Одобрено</div></div>
+        </div>
+
+        <div class="filters-bar">
+            <select id="statusFilter" class="filter-select">
+                <option value="all">Все статусы</option>
+                <option value="submitted">На рассмотрении</option>
+                <option value="documents_check">Проверка документов</option>
+                <option value="approved">Одобрено</option>
+                <option value="rejected">Отказано</option>
+                <option value="need_docs">Требуются документы</option>
+            </select>
+            <input type="text" id="searchInput" class="filter-input" placeholder="Поиск по клиенту...">
+        </div>
+
+        <div class="data-table">
+            <table>
+                <thead><tr><th>ID</th><th>Клиент</th><th>Сумма</th><th>Взнос</th><th>Срок</th><th>Статус</th><th>Дата</th><th></th></tr></thead>
+                <tbody id="applicationsBody"><tr><td colspan="8" class="loading">Загрузка...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Детали заявки</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const SUPABASE_URL = 'https://azpfhcmpamkaebghlwah.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6cGZoY21wYW1rYWViZ2hsd2FoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTg1MjQwNSwiZXhwIjoyMDg3NDI4NDA1fQ.CaCszo_Qh3k4M0C4c_HFnhViJCpJcqUPYpAE61VE_j8';
+            
+            let _supabase = null;
+            let allApps = [];
+            let currentUserId = null;
+            let currentAppId = null;
+            let msgInterval = null;
+            let currentSpecialist = null;
+            
+            function getSupabase() {
+                if (!_supabase) _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                return _supabase;
+            }
+            
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('ru-RU').format(amount) + ' ₽';
+            }
+            
+            function escapeHtml(s) { 
+                if (!s) return ''; 
+                return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); 
+            }
+            
+            function getStatusClass(status) {
+                const classes = {
+                    submitted: 'status-submitted', 
+                    documents_check: 'status-submitted',
+                    approved: 'status-approved', 
+                    rejected: 'status-rejected', 
+                    need_docs: 'status-need_docs'
+                };
+                return classes[status] || 'status-submitted';
+            }
+            
+            function getStatusName(status) {
+                const names = {
+                    submitted: 'На рассмотрении', 
+                    documents_check: 'Проверка документов',
+                    approved: 'Одобрена', 
+                    rejected: 'Отказано', 
+                    need_docs: 'Требуются документы'
+                };
+                return names[status] || status;
+            }
+            
+            async function loadApplications() {
+                const sb = getSupabase();
+                const { data: apps } = await sb.from('applications').select('*').order('created_at', { ascending: false });
+                allApps = apps || [];
+                for (let a of allApps) {
+                    try {
+                        const { data: u } = await sb.from('users').select('email, first_name, last_name').eq('id', a.user_id).single();
+                        a.users = u || { email: '—' };
+                    } catch(e) { a.users = { email: '—' }; }
+                }
+                
+                document.getElementById('totalCount').innerText = allApps.length;
+                document.getElementById('pendingCount').innerText = allApps.filter(a => a.status === 'submitted' || a.status === 'documents_check').length;
+                document.getElementById('approvedCount').innerText = allApps.filter(a => a.status === 'approved').length;
+                
+                const status = document.getElementById('statusFilter').value;
+                const search = document.getElementById('searchInput').value.toLowerCase();
+                let filtered = allApps;
+                if (status !== 'all') filtered = filtered.filter(a => a.status === status);
+                if (search) {
+                    filtered = filtered.filter(a => {
+                        const email = a.users?.email?.toLowerCase() || '';
+                        const name = `${a.users?.last_name || ''} ${a.users?.first_name || ''}`.toLowerCase();
+                        return email.includes(search) || name.includes(search);
+                    });
+                }
+                
+                const tbody = document.getElementById('applicationsBody');
+                if (!filtered.length) { 
+                    tbody.innerHTML = '<tr><td colspan="8" class="loading">Нет заявок</td></tr>'; 
+                    return; 
+                }
+                
+                tbody.innerHTML = filtered.map(a => {
+                    const name = a.users ? `${a.users.last_name || ''} ${a.users.first_name || ''}`.trim() || a.users.email : '—';
+                    return `<tr onclick="openChat('${a.user_id}', '${escapeHtml(name)}', '${a.id}')">
+                        <td>${a.id.slice(0,8)}</td>
+                        <td><strong>${escapeHtml(name)}</strong><br><span style="color:#8e95a5; font-size:11px;">${a.users?.email || ''}</span></td>
+                        <td>${formatCurrency(a.property_price)}</td>
+                        <td>${formatCurrency(a.down_payment)}</td>
+                        <td>${a.loan_term} лет</td>
+                        <td><span class="status-badge ${getStatusClass(a.status)}">${getStatusName(a.status)}</span></td>
+                        <td>${new Date(a.created_at).toLocaleDateString()}</td>
+                        <td style="color:#8e95a5;">→</td>
+                    </tr>`;
+                }).join('');
+            }
+            
+            async function loadMessages(userId) {
+                const sb = getSupabase();
+                const { data } = await sb.from('admin_messages').select('*').eq('user_id', userId).order('created_at', { ascending: true });
+                return data || [];
+            }
+            
+            async function refreshChat() {
+                if (!currentUserId) return;
+                const messages = await loadMessages(currentUserId);
+                const container = document.getElementById('chatMessages');
+                if (container) {
+                    if (!messages.length) {
+                        container.innerHTML = '<div style="color:#5a6170; text-align:center; padding:40px;">Нет сообщений</div>';
+                    } else {
+                        container.innerHTML = messages.map(m => `
+                            <div class="chat-message ${m.from_admin ? 'admin' : 'client'}">
+                                ${escapeHtml(m.message)}
+                                <div class="message-time">${new Date(m.created_at).toLocaleTimeString()}</div>
+                            </div>
+                        `).join('');
+                        container.scrollTop = container.scrollHeight;
+                    }
+                }
+            }
+            
+            window.sendMessage = async function() {
+                const input = document.getElementById('chatMsgInput');
+                const msg = input.value.trim();
+                if (!msg || !currentUserId) return;
+                const sb = getSupabase();
+                await sb.from('admin_messages').insert([{ user_id: currentUserId, message: msg, from_admin: true, created_at: new Date() }]);
+                input.value = '';
+                await refreshChat();
+            };
+            
+            window.updateStatus = async function() {
+                const newStatus = document.getElementById('statusSelect').value;
+                const sb = getSupabase();
+                
+                console.log('Обновление статуса:', currentAppId, '->', newStatus);
+                
+                // Если статус "Отказано" — удаляем заявку
+                if (newStatus === 'rejected') {
+                    if (confirm('Вы уверены, что хотите отказать в заявке? Она будет полностью удалена из системы.')) {
+                        try {
+                            // Удаляем сообщения чата связанные с этой заявкой
+                            await sb.from('admin_messages').delete().eq('application_id', currentAppId);
+                            // Удаляем саму заявку
+                            const { error } = await sb.from('applications').delete().eq('id', currentAppId);
+                            if (error) throw error;
+                            
+                            alert('✅ Заявка отклонена и удалена из системы');
+                            closeModal();
+                            await loadApplications();
+                        } catch (err) {
+                            console.error('Ошибка удаления:', err);
+                            alert('Ошибка при удалении: ' + err.message);
+                        }
+                    }
+                    return;
+                }
+                
+                // Для остальных статусов — просто обновляем
+                try {
+                    const { error } = await sb.from('applications').update({ 
+                        status: newStatus, 
+                        updated_at: new Date() 
+                    }).eq('id', currentAppId);
+                    
+                    if (error) throw error;
+                    
+                    alert(`✅ Статус заявки изменён на "${getStatusName(newStatus)}"`);
+                    await loadApplications();
+                    closeModal();
+                } catch (err) {
+                    console.error('Ошибка обновления:', err);
+                    alert('Ошибка при обновлении статуса: ' + err.message);
+                }
+            };
+            
+            window.openChat = async function(userId, clientName, appId) {
+                currentUserId = userId;
+                currentAppId = appId;
+                const app = allApps.find(a => a.id === appId);
+                const messages = await loadMessages(userId);
+                const messagesHtml = messages.length ? messages.map(m => `
+                    <div class="chat-message ${m.from_admin ? 'admin' : 'client'}">
+                        ${escapeHtml(m.message)}
+                        <div class="message-time">${new Date(m.created_at).toLocaleTimeString()}</div>
+                    </div>
+                `).join('') : '<div style="color:#5a6170; text-align:center; padding:40px;">Нет сообщений</div>';
+                
+                document.getElementById('modalTitle').innerHTML = `Заявка #${appId.slice(0,8)} — ${escapeHtml(clientName)}`;
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="modal-body">
+                        <div class="info-grid">
+                            <div class="info-row"><span class="info-label">Стоимость</span><span class="info-value">${formatCurrency(app.property_price)}</span></div>
+                            <div class="info-row"><span class="info-label">Взнос</span><span class="info-value">${formatCurrency(app.down_payment)}</span></div>
+                            <div class="info-row"><span class="info-label">Сумма кредита</span><span class="info-value">${formatCurrency(app.property_price - app.down_payment)}</span></div>
+                            <div class="info-row"><span class="info-label">Срок</span><span class="info-value">${app.loan_term} лет</span></div>
+                            <div class="info-row"><span class="info-label">Регион</span><span class="info-value">${escapeHtml(app.region) || '—'}</span></div>
+                            <div class="info-row"><span class="info-label">Дата</span><span class="info-value">${new Date(app.created_at).toLocaleString()}</span></div>
+                        </div>
+                        <div class="status-control">
+                            <select id="statusSelect" class="status-select">
+                                <option value="submitted" ${app.status === 'submitted' ? 'selected' : ''}>На рассмотрении</option>
+                                <option value="documents_check" ${app.status === 'documents_check' ? 'selected' : ''}>Проверка документов</option>
+                                <option value="approved" ${app.status === 'approved' ? 'selected' : ''}>Одобрить</option>
+                                <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Отказать</option>
+                                <option value="need_docs" ${app.status === 'need_docs' ? 'selected' : ''}>Запросить документы</option>
+                            </select>
+                            <button class="btn-primary" onclick="updateStatus()">Сохранить статус</button>
+                        </div>
+                        <div class="chat-section" style="margin-top:24px;">
+                            <h4 style="margin-bottom:16px;">Чат с клиентом</h4>
+                            <div class="chat-messages" id="chatMessages">${messagesHtml}</div>
+                            <div class="chat-input-area">
+                                <input type="text" id="chatMsgInput" class="chat-input" placeholder="Введите сообщение...">
+                                <button class="chat-send" onclick="sendMessage()">Отправить</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modal').classList.add('active');
+                if (msgInterval) clearInterval(msgInterval);
+                msgInterval = setInterval(() => refreshChat(), 5000);
+            };
+            
+            window.closeModal = function() {
+                if (msgInterval) clearInterval(msgInterval);
+                document.getElementById('modal').classList.remove('active');
+                currentUserId = null;
+                currentAppId = null;
+            };
+            
+            async function loadSpecialistInfo() {
+                const saved = sessionStorage.getItem('specialist');
+                if (saved) {
+                    currentSpecialist = JSON.parse(saved);
+                    document.getElementById('userInfo').innerHTML = `${escapeHtml(currentSpecialist.full_name || currentSpecialist.login)}`;
+                } else {
+                    document.getElementById('userInfo').innerHTML = 'Специалист';
+                }
+            }
+            
+            document.getElementById('statusFilter').addEventListener('change', () => loadApplications());
+            document.getElementById('searchInput').addEventListener('input', () => loadApplications());
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+            });
+            
+            getSupabase();
+            loadSpecialistInfo();
+            loadApplications();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заявка принята | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="thank-you-container">
+        <div class="success-icon">✓</div>
+        
+        <h1 class="thank-you-title">Спасибо за анкету!</h1>
+        
+        <div class="user-data-preview" id="userDataPreview">
+            <h3>Ваши данные из анкеты</h3>
+            <div class="data-row">
+                <span class="data-label">Имя</span>
+                <span class="data-value" id="previewName"></span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Email</span>
+                <span class="data-value" id="previewEmail"></span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Телефон</span>
+                <span class="data-value" id="previewPhone"></span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Интересует</span>
+                <span class="data-value" id="previewProperty"></span>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <p>🔥 Для точного расчета и сохранения заявки создайте аккаунт</p>
+            <p class="info-small">После регистрации нужно будет заполнить документы — это займет 2 минуты</p>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="register.html" class="btn btn-primary" id="registerBtn">Зарегистрироваться</a>
+        </div>
+        
+        <div class="alternative-links">
+            <p><a href="login.html" class="text-link">Уже есть аккаунт? Войти</a></p>
+            <p><a href="index.html" class="text-link">← Вернуться к анкете</a></p>
+        </div>
+    </div>
+    
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/thank-you.js"></script>
+</body>
+</html>

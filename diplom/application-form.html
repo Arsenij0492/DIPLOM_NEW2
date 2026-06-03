@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новая заявка | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/bank-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .progress-bar-steps {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+        .progress-step-custom {
+            flex: 1;
+            height: 4px;
+            background: #e0e4e8;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        .progress-step-custom.active {
+            background: #0047AB;
+        }
+        .progress-step-custom.completed {
+            background: #00A36C;
+        }
+        .step-indicator {
+            font-size: 13px;
+            color: #6c7a8e;
+            margin-bottom: 16px;
+        }
+        .step-indicator span {
+            color: #0047AB;
+            font-weight: 600;
+        }
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 32px;
+        }
+        .preview-calculation {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .calc-result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e4e8;
+        }
+        .calc-result-item:last-child {
+            border-bottom: none;
+        }
+        .summary-section {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+        .summary-section h4 {
+            margin: 20px 0 12px 0;
+            font-size: 16px;
+            color: #1a1f36;
+        }
+        .summary-section h4:first-child {
+            margin-top: 0;
+        }
+        .summary-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e4e8;
+        }
+        .agreement-check {
+            margin: 24px 0;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .checkbox-label input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        textarea.form-control-bank {
+            resize: vertical;
+            min-height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bank-container form-container">
+        <!-- Шапка -->
+        <div class="bank-header">
+            <div class="logo-area">
+                <h1>Кубань Кредит</h1>
+                <p>Новая заявка</p>
+            </div>
+            <div class="header-actions">
+                <div class="user-card" id="userCard">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info-header">
+                        <div class="user-name-header" id="userName">Загрузка...</div>
+                        <div class="user-role-header" id="userRole">Клиент</div>
+                    </div>
+                </div>
+                <a href="dashboard.html" class="btn-outline-bank">Назад</a>
+                <button class="btn-outline-bank" id="logoutBtn">Выход</button>
+            </div>
+        </div>
+
+        <!-- Прогресс -->
+        <div class="step-indicator">шаг <span id="currentStep">1</span> из 4</div>
+        <div class="progress-bar-steps" id="progressBar">
+            <div class="progress-step-custom active" data-step="1"></div>
+            <div class="progress-step-custom" data-step="2"></div>
+            <div class="progress-step-custom" data-step="3"></div>
+            <div class="progress-step-custom" data-step="4"></div>
+        </div>
+
+        <!-- Шаг 1 -->
+        <div class="form-step active" id="step1">
+            <h2 style="margin-bottom: 24px;">Параметры кредита</h2>
+            
+            <div class="form-group-bank">
+                <label>Стоимость недвижимости (₽)</label>
+                <input type="number" id="propertyPrice" class="form-control-bank" min="500000" max="10000000" step="100000" value="3000000">
+                <div style="font-size: 12px; color: #6c7a8e; margin-top: 4px;">Минимум 500 000 ₽, максимум 10 000 000 ₽</div>
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Первоначальный взнос (₽)</label>
+                <input type="number" id="downPayment" class="form-control-bank" min="0" max="10000000" step="100000" value="600000">
+                <div style="font-size: 12px; color: #6c7a8e; margin-top: 4px;">Минимум 10% от стоимости <span id="downPercent">20%</span></div>
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Срок кредита (лет)</label>
+                <select id="loanTerm" class="form-control-bank">
+                    <option value="5">5 лет</option>
+                    <option value="10" selected>10 лет</option>
+                    <option value="15">15 лет</option>
+                    <option value="20">20 лет</option>
+                    <option value="25">25 лет</option>
+                    <option value="30">30 лет</option>
+                </select>
+            </div>
+            
+            <div class="preview-calculation" id="previewCalc">
+                <div class="calc-result-item">
+                    <span>Сумма кредита:</span>
+                    <strong id="loanAmount">2 400 000 ₽</strong>
+                </div>
+                <div class="calc-result-item">
+                    <span>Ежемесячный платеж:</span>
+                    <strong id="monthlyPayment" style="color: #0047AB;">22 654 ₽</strong>
+                </div>
+                <div class="calc-result-item">
+                    <span>Ставка:</span>
+                    <strong>2.5%</strong>
+                </div>
+            </div>
+            
+            <div class="form-navigation">
+                <div></div>
+                <button class="btn-primary-bank" onclick="nextStep(2)">Далее →</button>
+            </div>
+        </div>
+
+        <!-- Шаг 2 -->
+        <div class="form-step" id="step2">
+            <h2 style="margin-bottom: 24px;">Объект недвижимости</h2>
+            
+            <div class="form-group-bank">
+                <label>Регион</label>
+                <select id="region" class="form-control-bank">
+                    <option value="">Выберите регион</option>
+                    <option value="Краснодарский край" selected>Краснодарский край</option>
+                    <option value="Ростовская область">Ростовская область</option>
+                    <option value="Ставропольский край">Ставропольский край</option>
+                    <option value="Республика Адыгея">Республика Адыгея</option>
+                    <option value="Республика Крым">Республика Крым</option>
+                </select>
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Адрес объекта</label>
+                <textarea id="propertyAddress" class="form-control-bank" rows="3" placeholder="г. Краснодар, ул. Примерная, д. 1"></textarea>
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Тип недвижимости</label>
+                <select id="propertyType" class="form-control-bank">
+                    <option value="house">Дом</option>
+                    <option value="apartment">Квартира</option>
+                    <option value="townhouse">Таунхаус</option>
+                    <option value="land">Земельный участок</option>
+                </select>
+            </div>
+            
+            <div class="form-navigation">
+                <button class="btn-outline-bank" onclick="prevStep(1)">← Назад</button>
+                <button class="btn-primary-bank" onclick="nextStep(3)">Далее →</button>
+            </div>
+        </div>
+
+        <!-- Шаг 3 -->
+        <div class="form-step" id="step3">
+            <h2 style="margin-bottom: 24px;">Документы</h2>
+            <p style="color: #6c7a8e; margin-bottom: 24px;">Данные из профиля подгрузятся автоматически</p>
+            
+            <div class="document-card-bank" style="margin-bottom: 24px;">
+                <div class="document-title">
+                    Паспорт РФ
+                    <span id="passportStepStatus" class="status-badge-bank status-pending">Не заполнен</span>
+                </div>
+                <div id="passportStepInfo">Данные не заполнены</div>
+                <a href="profile.html" class="btn-outline-bank" style="margin-top: 16px; display: inline-block;">Заполнить в профиле</a>
+            </div>
+            
+            <div class="document-card-bank">
+                <div class="document-title">
+                    СНИЛС
+                    <span id="snilsStepStatus" class="status-badge-bank status-pending">Не заполнен</span>
+                </div>
+                <div id="snilsStepInfo">Данные не заполнены</div>
+                <a href="profile.html" class="btn-outline-bank" style="margin-top: 16px; display: inline-block;">Заполнить в профиле</a>
+            </div>
+            
+            <div class="form-navigation">
+                <button class="btn-outline-bank" onclick="prevStep(2)">← Назад</button>
+                <button class="btn-primary-bank" onclick="nextStep(4)">Далее →</button>
+            </div>
+        </div>
+
+        <!-- Шаг 4 -->
+        <div class="form-step" id="step4">
+            <h2 style="margin-bottom: 24px;">Проверка данных</h2>
+            
+            <div class="summary-section" id="summarySection"></div>
+            
+            <div class="agreement-check">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="agreeTerms">
+                    <span>Я подтверждаю, что все данные верны</span>
+                </label>
+            </div>
+            
+            <div class="form-navigation">
+                <button class="btn-outline-bank" onclick="prevStep(3)">← Назад</button>
+                <button class="btn-primary-bank" onclick="saveApplication()">Отправить заявку</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Загрузчик -->
+    <div class="bank-loader" id="bankLoader">
+        <div class="loader-spinner-bank"></div>
+        <div class="loader-text-bank" id="loaderText">Загрузка...</div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/error-handler.js"></script>
+    
+    <script>
+        let currentStep = 1;
+        let currentUser = null;
+        let editId = null;
+        
+        function showLoader(text) {
+            const loader = document.getElementById('bankLoader');
+            const loaderText = document.getElementById('loaderText');
+            if (loaderText) loaderText.textContent = text;
+            if (loader) loader.classList.add('active');
+        }
+        
+        function hideLoader() {
+            const loader = document.getElementById('bankLoader');
+            if (loader) loader.classList.remove('active');
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ru-RU').format(amount) + ' ₽';
+        }
+        
+        function updatePreview() {
+            const price = parseFloat(document.getElementById('propertyPrice').value) || 0;
+            const down = parseFloat(document.getElementById('downPayment').value) || 0;
+            const term = parseInt(document.getElementById('loanTerm').value) || 10;
+            const percent = price > 0 ? Math.round((down / price) * 100) : 0;
+            
+            document.getElementById('downPercent').textContent = percent + '%';
+            
+            if (price >= 500000 && down >= price * 0.1) {
+                const loanAmount = price - down;
+                const rate = 2.5;
+                const monthlyRate = rate / 100 / 12;
+                const months = term * 12;
+                let payment = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, months) / 
+                             (Math.pow(1 + monthlyRate, months) - 1);
+                
+                document.getElementById('loanAmount').textContent = formatCurrency(loanAmount);
+                document.getElementById('monthlyPayment').textContent = formatCurrency(Math.round(payment));
+            } else {
+                document.getElementById('loanAmount').textContent = formatCurrency(0);
+                document.getElementById('monthlyPayment').textContent = formatCurrency(0);
+            }
+        }
+        
+        function updateProgress() {
+            document.getElementById('currentStep').textContent = currentStep;
+            for (let i = 1; i <= 4; i++) {
+                const stepEl = document.querySelector(`.progress-step-custom[data-step="${i}"]`);
+                if (stepEl) {
+                    if (i < currentStep) {
+                        stepEl.classList.add('completed');
+                        stepEl.classList.remove('active');
+                    } else if (i === currentStep) {
+                        stepEl.classList.add('active');
+                        stepEl.classList.remove('completed');
+                    } else {
+                        stepEl.classList.remove('active', 'completed');
+                    }
+                }
+            }
+        }
+        
+        function nextStep(step) {
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+            updateProgress();
+            if (step === 4) updateSummary();
+        }
+        
+        function prevStep(step) {
+            document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            currentStep = step;
+            updateProgress();
+        }
+        
+        function updateSummary() {
+            const price = document.getElementById('propertyPrice').value;
+            const down = document.getElementById('downPayment').value;
+            const term = document.getElementById('loanTerm').value;
+            const region = document.getElementById('region').value;
+            const address = document.getElementById('propertyAddress').value;
+            
+            document.getElementById('summarySection').innerHTML = `
+                <h4>Параметры кредита</h4>
+                <div class="summary-item">Стоимость: ${formatCurrency(price)}</div>
+                <div class="summary-item">Взнос: ${formatCurrency(down)}</div>
+                <div class="summary-item">Срок: ${term} лет</div>
+                <div class="summary-item">Сумма кредита: ${formatCurrency(price - down)}</div>
+                
+                <h4>Объект недвижимости</h4>
+                <div class="summary-item">Регион: ${region}</div>
+                <div class="summary-item">Адрес: ${address}</div>
+            `;
+        }
+        
+        async function saveApplication() {
+            if (!document.getElementById('agreeTerms').checked) {
+                alert('Подтвердите согласие');
+                return;
+            }
+            
+            const applicationData = {
+                propertyPrice: parseFloat(document.getElementById('propertyPrice').value),
+                downPayment: parseFloat(document.getElementById('downPayment').value),
+                loanTerm: parseInt(document.getElementById('loanTerm').value),
+                region: document.getElementById('region').value,
+                propertyAddress: document.getElementById('propertyAddress').value,
+                documents: {}
+            };
+            
+            showLoader('Сохранение заявки...');
+            
+            try {
+                let result;
+                if (editId) {
+                    const supabase = window.getSupabase();
+                    const { error } = await supabase
+                        .from('applications')
+                        .update({
+                            property_price: applicationData.propertyPrice,
+                            down_payment: applicationData.downPayment,
+                            loan_term: applicationData.loanTerm,
+                            region: applicationData.region,
+                            property_address: applicationData.propertyAddress,
+                            updated_at: new Date()
+                        })
+                        .eq('id', editId);
+                    if (error) throw error;
+                    result = { success: true };
+                } else {
+                    result = await window.createApplication(applicationData);
+                }
+                
+                if (result.success) {
+                    hideLoader();
+                    alert('Заявка сохранена!');
+                    window.location.href = 'dashboard.html';
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                hideLoader();
+                alert('Ошибка: ' + error.message);
+            }
+        }
+        
+        async function loadApplicationForEdit() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+            if (!id) return;
+            
+            editId = id;
+            showLoader('Загрузка заявки...');
+            
+            try {
+                const supabase = window.getSupabase();
+                const { data, error } = await supabase
+                    .from('applications')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('propertyPrice').value = data.property_price;
+                document.getElementById('downPayment').value = data.down_payment;
+                document.getElementById('loanTerm').value = data.loan_term;
+                document.getElementById('region').value = data.region || 'Краснодарский край';
+                document.getElementById('propertyAddress').value = data.property_address || '';
+                
+                updatePreview();
+                hideLoader();
+            } catch (error) {
+                hideLoader();
+                console.error('Load error:', error);
+            }
+        }
+        
+        // Загрузка документов из НОВОЙ таблицы user_documents_new
+        // Загрузка документов из НОВОЙ таблицы user_documents_new
+async function loadDocumentsFromProfile() {
+    const result = await window.getCurrentUser();
+    if (!result.success || !result.user) return;
+    
+    const userId = result.user.id;
+    const supabase = window.getSupabase();
+    
+    try {
+        const { data, error } = await supabase
+            .from('user_documents_new')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+        
+        if (error) {
+            console.error('Ошибка загрузки документов:', error);
+            return;
+        }
+        
+        if (data) {
+            console.log('Документы загружены из профиля:', data);
+            
+            if (data.passport_series || data.passport_number) {
+                document.getElementById('passportStepStatus').className = 'status-badge-bank status-approved';
+                document.getElementById('passportStepStatus').textContent = 'Заполнен';
+                document.getElementById('passportStepInfo').innerHTML = `Паспорт: ${data.passport_series || ''} ${data.passport_number || ''}`;
+            }
+            
+            if (data.snils_number) {
+                document.getElementById('snilsStepStatus').className = 'status-badge-bank status-approved';
+                document.getElementById('snilsStepStatus').textContent = 'Заполнен';
+                document.getElementById('snilsStepInfo').innerHTML = `СНИЛС: ${data.snils_number}`;
+            }
+        }
+    } catch (err) {
+        console.error('Ошибка:', err);
+    }
+}
+
+// Вызов в loadUserInfo или отдельно
+        
+        async function loadUserInfo() {
+            const result = await window.getCurrentUser();
+            if (result.success && result.user) {
+                currentUser = result.user;
+                const email = currentUser.email || '';
+                document.getElementById('userName').textContent = email;
+                document.getElementById('userAvatar').textContent = email.charAt(0).toUpperCase();
+                
+                // Загружаем документы из новой таблицы
+                await loadDocumentsFromProfile();
+            }
+        }
+        
+        document.getElementById('propertyPrice').addEventListener('input', updatePreview);
+        document.getElementById('downPayment').addEventListener('input', updatePreview);
+        document.getElementById('loanTerm').addEventListener('change', updatePreview);
+        
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await window.logoutUser();
+            window.location.href = 'index.html';
+        });
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserInfo();
+            await loadApplicationForEdit();
+            updatePreview();
+        });
+    </script>
+</body>
+</html>

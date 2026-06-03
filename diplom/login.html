@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Кубань Кредит</h1>
+                <p>Вход в личный кабинет</p>
+            </div>
+            
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="ivanov@mail.ru" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" class="form-control" id="password" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Войти</button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Нет аккаунта? <a href="index.html">Заполнить анкету</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

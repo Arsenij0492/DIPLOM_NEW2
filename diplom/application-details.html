@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали заявки | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/bank-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .details-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e4e8;
+        }
+        .status-badge-large {
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .details-card {
+            background: white;
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .details-card h3 {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f2f5;
+            font-size: 18px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            color: #6c7a8e;
+            font-size: 14px;
+        }
+        .detail-value {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .history-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #f0f2f5;
+            position: relative;
+            padding-left: 24px;
+        }
+        .history-item::before {
+            content: "●";
+            position: absolute;
+            left: 0;
+            color: #0047AB;
+            font-size: 12px;
+        }
+        .history-date {
+            font-size: 12px;
+            color: #6c7a8e;
+            margin-bottom: 4px;
+        }
+        .history-status {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .history-comment {
+            font-size: 13px;
+            color: #6c7a8e;
+            margin-top: 4px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .btn-danger-bank {
+            background: #dc2626;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger-bank:hover {
+            background: #b91c1c;
+        }
+        .btn-warning-bank {
+            background: #f59e0b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-warning-bank:hover {
+            background: #d97706;
+        }
+        .document-view {
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .document-view h4 {
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+        .document-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .document-label {
+            width: 120px;
+            color: #6c7a8e;
+        }
+        .document-value {
+            flex: 1;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="bank-container details-container">
+        <!-- Шапка -->
+        <div class="bank-header">
+            <div class="logo-area">
+                <h1>Кубань Кредит</h1>
+                <p>Детали заявки</p>
+            </div>
+            <div class="header-actions">
+                <div class="user-card" id="userCard">
+                    <div class="user-avatar" id="userAvatar">?</div>
+                    <div class="user-info-header">
+                        <div class="user-name-header" id="userName">Загрузка...</div>
+                        <div class="user-role-header" id="userRole">Клиент</div>
+                    </div>
+                </div>
+                <a href="dashboard.html" class="btn-outline-bank" id="backBtn">Назад</a>
+                <button class="btn-outline-bank" id="logoutBtn">Выход</button>
+            </div>
+        </div>
+
+        <!-- Статус -->
+        <div class="status-header">
+            <div>
+                <h2 id="applicationTitle">Заявка на ипотеку</h2>
+                <p class="text-muted" id="applicationId" style="color: #6c7a8e; font-size: 13px; margin-top: 4px;">ID: загрузка...</p>
+            </div>
+            <div>
+                <span class="status-badge-large" id="applicationStatus">Загрузка...</span>
+            </div>
+        </div>
+
+        <!-- Кнопки для эксперта -->
+        <div class="action-buttons" id="expertButtons" style="display: none;">
+            <button class="btn-primary-bank" id="approveBtn">✅ Одобрить</button>
+            <button class="btn-danger-bank" id="rejectBtn">❌ Отказать</button>
+            <button class="btn-warning-bank" id="needDocsBtn">📄 Запросить документы</button>
+        </div>
+
+        <!-- Параметры кредита -->
+        <div class="details-card">
+            <h3>Параметры кредита</h3>
+            <div id="loanDetails"></div>
+        </div>
+
+        <!-- Объект -->
+        <div class="details-card">
+            <h3>Объект недвижимости</h3>
+            <div id="propertyDetails"></div>
+        </div>
+
+        <!-- Документы -->
+        <div class="details-card">
+            <h3>Документы в заявке</h3>
+            <div id="documentsList">
+                <div class="skeleton-text" style="height: 100px;"></div>
+            </div>
+        </div>
+
+        <!-- История -->
+        <div class="details-card">
+            <h3>История заявки</h3>
+            <div id="historyList">
+                <div class="skeleton-text"></div>
+                <div class="skeleton-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Загрузчик -->
+    <div class="bank-loader" id="bankLoader">
+        <div class="loader-spinner-bank"></div>
+        <div class="loader-text-bank" id="loaderText">Загрузка...</div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/error-handler.js"></script>
+    
+    <script>
+        let applicationId = null;
+        let currentApplication = null;
+        let currentUser = null;
+        let userRole = 'client';
+        
+        function showLoader(text) {
+            const loader = document.getElementById('bankLoader');
+            const loaderText = document.getElementById('loaderText');
+            if (loaderText) loaderText.textContent = text;
+            if (loader) loader.classList.add('active');
+        }
+        
+        function hideLoader() {
+            const loader = document.getElementById('bankLoader');
+            if (loader) loader.classList.remove('active');
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ru-RU', {
+                style: 'currency',
+                currency: 'RUB',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        function getStatusName(status) {
+            const statuses = {
+                draft: 'Черновик',
+                submitted: 'На рассмотрении',
+                documents_check: 'Проверка документов',
+                approved: 'Одобрена',
+                rejected: 'Отказано',
+                need_docs: 'Требуются документы'
+            };
+            return statuses[status] || status;
+        }
+        
+        function getStatusClass(status) {
+            const classes = {
+                draft: 'status-pending',
+                submitted: 'status-pending',
+                documents_check: 'status-pending',
+                approved: 'status-approved',
+                rejected: 'status-pending',
+                need_docs: 'status-pending'
+            };
+            return classes[status] || 'status-pending';
+        }
+        
+        function calculatePayment() {
+            if (!currentApplication) return 0;
+            const loanAmount = currentApplication.property_price - currentApplication.down_payment;
+            const rate = 2.5;
+            const monthlyRate = rate / 100 / 12;
+            const months = currentApplication.loan_term * 12;
+            if (monthlyRate > 0) {
+                return Math.round(loanAmount * monthlyRate * Math.pow(1 + monthlyRate, months) / (Math.pow(1 + monthlyRate, months) - 1));
+            }
+            return Math.round(loanAmount / months);
+        }
+        
+        function displayApplication() {
+            if (!currentApplication) return;
+            
+            document.getElementById('applicationTitle').textContent = `Заявка на ипотеку #${currentApplication.id.slice(0,8)}`;
+            document.getElementById('applicationId').textContent = `ID: ${currentApplication.id}`;
+            
+            const statusName = getStatusName(currentApplication.status);
+            const statusClass = getStatusClass(currentApplication.status);
+            const statusEl = document.getElementById('applicationStatus');
+            statusEl.textContent = statusName;
+            statusEl.className = `status-badge-large status-badge-bank ${statusClass}`;
+            
+            // Параметры кредита
+            document.getElementById('loanDetails').innerHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">Стоимость недвижимости</span>
+                    <span class="detail-value">${formatCurrency(currentApplication.property_price)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Первоначальный взнос</span>
+                    <span class="detail-value">${formatCurrency(currentApplication.down_payment)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Сумма кредита</span>
+                    <span class="detail-value" style="color: #0047AB;">${formatCurrency(currentApplication.property_price - currentApplication.down_payment)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Срок кредита</span>
+                    <span class="detail-value">${currentApplication.loan_term} лет</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Ежемесячный платеж</span>
+                    <span class="detail-value" style="color: #0047AB;">${formatCurrency(calculatePayment())}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Процентная ставка</span>
+                    <span class="detail-value">2.5%</span>
+                </div>
+            `;
+            
+            // Объект
+            document.getElementById('propertyDetails').innerHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">Регион</span>
+                    <span class="detail-value">${currentApplication.region || 'Не указан'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Адрес</span>
+                    <span class="detail-value">${currentApplication.property_address || 'Не указан'}</span>
+                </div>
+            `;
+            
+            // Документы
+            const docs = currentApplication.documents || {};
+            let docsHtml = '';
+            if (docs.passport && Object.values(docs.passport).some(v => v)) {
+                docsHtml += `
+                    <div class="document-view">
+                        <h4>Паспорт РФ</h4>
+                        <div class="document-row">
+                            <span class="document-label">Серия/номер:</span>
+                            <span class="document-value">${docs.passport.series || ''} ${docs.passport.number || ''}</span>
+                        </div>
+                        <div class="document-row">
+                            <span class="document-label">Кем выдан:</span>
+                            <span class="document-value">${docs.passport.issued || ''}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            if (docs.snils && docs.snils.number) {
+                docsHtml += `
+                    <div class="document-view">
+                        <h4>СНИЛС</h4>
+                        <div class="document-row">
+                            <span class="document-label">Номер:</span>
+                            <span class="document-value">${docs.snils.number}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            if (!docsHtml) docsHtml = '<p style="color: #6c7a8e;">Документы не загружены</p>';
+            document.getElementById('documentsList').innerHTML = docsHtml;
+        }
+        
+        async function loadHistory() {
+            try {
+                const supabase = window.getSupabase();
+                const { data, error } = await supabase
+                    .from('status_history')
+                    .select('*')
+                    .eq('application_id', applicationId)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('historyList');
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p style="color: #6c7a8e;">История изменений отсутствует</p>';
+                    return;
+                }
+                
+                let html = '';
+                data.forEach(item => {
+                    html += `
+                        <div class="history-item">
+                            <div class="history-date">${new Date(item.created_at).toLocaleString()}</div>
+                            <div class="history-status">Статус изменен на "${getStatusName(item.new_status)}"</div>
+                            ${item.comment ? `<div class="history-comment">${item.comment}</div>` : ''}
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (error) {
+                console.log('History not available');
+                document.getElementById('historyList').innerHTML = '<p style="color: #6c7a8e;">История недоступна</p>';
+            }
+        }
+        
+        async function loadApplication() {
+    showLoader('Загрузка заявки...');
+    try {
+        const supabase = window.getSupabase();
+        const { data, error } = await supabase
+            .from('applications')
+            .select('*')
+            .eq('id', applicationId)
+            .single();
+        
+        if (error || !data) {
+            alert('Заявка не найдена или была удалена');
+            window.location.href = 'dashboard.html';
+            return;
+        }
+        
+        currentApplication = data;
+        displayApplication();
+        await loadHistory();
+        hideLoader();
+    } catch (error) {
+        hideLoader();
+        console.error('Load error:', error);
+        alert('Заявка не найдена');
+        window.location.href = 'dashboard.html';
+    }
+}
+        
+        async function loadUserInfo() {
+            const result = await window.getCurrentUser();
+            if (result.success && result.user) {
+                currentUser = result.user;
+                userRole = currentUser.profile?.role || 'client';
+                const email = currentUser.email || '';
+                document.getElementById('userName').textContent = email;
+                document.getElementById('userAvatar').textContent = email.charAt(0).toUpperCase();
+                
+                // Показываем кнопки в зависимости от роли и статуса
+                if (userRole === 'client' && currentApplication?.status === 'draft') {
+                    const btns = document.getElementById('actionButtons');
+                    if (btns) btns.style.display = 'flex';
+                    const editBtn = document.getElementById('editBtn');
+                    if (editBtn) editBtn.href = `application-form.html?id=${applicationId}`;
+                }
+                
+                if (userRole === 'expert' && currentApplication?.status !== 'approved' && currentApplication?.status !== 'rejected') {
+                    document.getElementById('expertButtons').style.display = 'flex';
+                }
+            }
+        }
+        
+        async function updateStatus(newStatus, comment = '') {
+            showLoader('Обновление статуса...');
+            try {
+                const result = await window.updateApplicationStatus(applicationId, newStatus, comment);
+                if (result.success) {
+                    hideLoader();
+                    alert('Статус обновлен!');
+                    location.reload();
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                hideLoader();
+                alert('Ошибка: ' + error.message);
+            }
+        }
+        
+        function getApplicationId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            applicationId = getApplicationId();
+            if (!applicationId) {
+                alert('ID заявки не указан');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            await loadApplication();
+            await loadUserInfo();
+        });
+        
+        // Кнопки
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await window.logoutUser();
+            window.location.href = 'index.html';
+        });
+        
+        document.getElementById('backBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = userRole === 'expert' ? 'expert-dashboard.html' : 'dashboard.html';
+        });
+        
+        document.getElementById('deleteBtn')?.addEventListener('click', async () => {
+            if (!confirm('Удалить заявку?')) return;
+            showLoader('Удаление...');
+            try {
+                const supabase = window.getSupabase();
+                const { error } = await supabase.from('applications').delete().eq('id', applicationId);
+                if (error) throw error;
+                hideLoader();
+                alert('Заявка удалена');
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                hideLoader();
+                alert('Ошибка: ' + error.message);
+            }
+        });
+        
+        document.getElementById('submitBtn')?.addEventListener('click', () => {
+            updateStatus('submitted', 'Заявка отправлена клиентом');
+        });
+        
+        document.getElementById('approveBtn')?.addEventListener('click', () => {
+            const comment = prompt('Комментарий к одобрению (необязательно):');
+            updateStatus('approved', comment || 'Одобрено специалистом');
+        });
+        
+        document.getElementById('rejectBtn')?.addEventListener('click', () => {
+            const comment = prompt('Укажите причину отказа:', '');
+            if (comment !== null) updateStatus('rejected', comment);
+        });
+        
+        document.getElementById('needDocsBtn')?.addEventListener('click', () => {
+            const comment = prompt('Какие документы нужны?', '');
+            if (comment !== null) updateStatus('need_docs', comment);
+        });
+    </script>
+</body>
+</html>

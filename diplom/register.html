@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <h1>Создайте аккаунт</h1>
+            <p>Чтобы сохранить заявку и отслеживать статус</p>
+        </div>
+        
+        <div class="register-form">
+            <div class="prefilled-badge" id="prefilledBanner" style="display: none;">
+                <span>✓</span>
+                Данные из анкеты уже подставлены
+            </div>
+            
+            <form id="registerForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Имя</label>
+                        <input type="text" class="form-control" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Фамилия</label>
+                        <input type="text" class="form-control" id="lastName" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="tel" class="form-control" id="phone" placeholder="+7 (___) ___-__-__" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" class="form-control" id="password" minlength="6" placeholder="минимум 6 символов" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Подтверждение пароля</label>
+                    <input type="password" class="form-control" id="passwordConfirm" placeholder="повторите пароль" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Создать аккаунт</button>
+            </form>
+            
+            <div class="auth-footer" style="margin-top: 20px; border-top: none;">
+                <p class="text-small">
+                    <a href="index.html">← Вернуться к анкете</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/register.js"></script>
+</body>
+</html>

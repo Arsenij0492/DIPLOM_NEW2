@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/bank-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .profile-container { max-width: 800px; margin: 0 auto; }
+        .document-card-bank { margin-bottom: 24px; background: white; border-radius: 24px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .form-control-bank {
+            width: 100%; padding: 12px 0; font-size: 15px; border: none;
+            border-bottom: 2px solid #e0e4e8; background: transparent;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .form-control-bank:focus { outline: none; border-bottom-color: #0047AB; }
+        .form-row-bank { display: flex; gap: 20px; margin-bottom: 20px; }
+        .form-group-bank { flex: 1; margin-bottom: 20px; }
+        .form-group-bank label {
+            display: block; font-size: 12px; font-weight: 500;
+            color: #6c7a8e; margin-bottom: 6px; text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .btn-save {
+            background: linear-gradient(135deg, #0047AB, #0052CC);
+            color: white; padding: 12px 28px; border-radius: 100px;
+            font-weight: 600; border: none; cursor: pointer; margin-top: 16px;
+        }
+        .status-badge-bank {
+            padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 600;
+        }
+        .status-pending { background: #FFF3E0; color: #E65100; }
+        .status-approved { background: #E8F5E9; color: #2E7D32; }
+        .document-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .document-title h3 { font-size: 18px; font-weight: 600; color: #1a1f36; }
+        .bank-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 32px; padding-bottom: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .logo-area h1 {
+            font-size: 28px; font-weight: 700;
+            background: linear-gradient(135deg, #0047AB, #0052CC);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; color: transparent;
+        }
+        .bank-container { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+        .user-card {
+            display: flex; align-items: center; gap: 8px; background: white;
+            padding: 4px 12px 4px 8px; border-radius: 40px;
+            border: 1px solid #e0e4e8; cursor: pointer;
+        }
+        .user-avatar {
+            width: 28px; height: 28px; background: linear-gradient(135deg, #0047AB, #0052CC);
+            border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; color: white; font-weight: 600; font-size: 12px;
+        }
+        .btn-outline-bank {
+            background: transparent; border: 1px solid #e0e4e8;
+            padding: 8px 16px; border-radius: 100px; font-weight: 500;
+            cursor: pointer; color: #1a1f36; text-decoration: none;
+        }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        @media (max-width: 600px) { .form-row-bank { flex-direction: column; gap: 0; } }
+    </style>
+</head>
+<body>
+    <div class="bank-container profile-container">
+        <div class="bank-header">
+            <div class="logo-area">
+                <h1>Кубань Кредит</h1>
+                <p>Мои документы</p>
+            </div>
+            <div class="header-actions">
+                <div class="user-card" id="userCard">
+                    <div class="user-avatar" id="userAvatar">З</div>
+                    <div class="user-info-header">
+                        <div class="user-name-header" id="userName" style="font-weight:500;font-size:12px;">Загрузка...</div>
+                        <div class="user-role-header" id="userRole" style="font-size:9px;color:#6c7a8e;">Клиент</div>
+                    </div>
+                </div>
+                <a href="dashboard.html" class="btn-outline-bank">← Назад</a>
+            </div>
+        </div>
+
+        <!-- Паспорт -->
+        <div class="document-card-bank">
+            <div class="document-title">
+                <h3>Паспорт РФ</h3>
+                <span class="status-badge-bank status-pending" id="passportStatus">Не заполнен</span>
+            </div>
+            
+            <div class="form-row-bank">
+                <div class="form-group-bank">
+                    <label>Серия</label>
+                    <input type="text" id="passportSeries" class="form-control-bank" maxlength="4" placeholder="1234">
+                </div>
+                <div class="form-group-bank">
+                    <label>Номер</label>
+                    <input type="text" id="passportNumber" class="form-control-bank" maxlength="6" placeholder="123456">
+                </div>
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Кем выдан</label>
+                <input type="text" id="passportIssued" class="form-control-bank" placeholder="УФМС России">
+            </div>
+            
+            <div class="form-row-bank">
+                <div class="form-group-bank">
+                    <label>Дата выдачи</label>
+                    <input type="date" id="passportDate" class="form-control-bank">
+                </div>
+                <div class="form-group-bank">
+                    <label>Код подразделения</label>
+                    <input type="text" id="passportCode" class="form-control-bank" maxlength="7" placeholder="123-456">
+                </div>
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Место рождения</label>
+                <input type="text" id="passportBirthplace" class="form-control-bank" placeholder="г. Москва">
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Адрес регистрации</label>
+                <textarea id="passportAddress" class="form-control-bank" rows="2" placeholder="г. Москва, ул. Примерная, д. 1" style="resize: vertical;"></textarea>
+            </div>
+            
+            <button class="btn-save" onclick="savePassport()">Сохранить паспорт</button>
+        </div>
+
+        <!-- СНИЛС -->
+        <div class="document-card-bank">
+            <div class="document-title">
+                <h3>СНИЛС</h3>
+                <span class="status-badge-bank status-pending" id="snilsStatus">Не заполнен</span>
+            </div>
+            
+            <div class="form-group-bank">
+                <label>Номер СНИЛС</label>
+                <input type="text" id="snilsNumber" class="form-control-bank" placeholder="123-456-789 01">
+            </div>
+            
+            <button class="btn-save" onclick="saveSnils()">Сохранить СНИЛС</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/error-handler.js"></script>
+    
+    <script>
+        let currentUser = null;
+        let currentUserId = null;
+        
+        async function loadUserInfo() {
+            const result = await window.getCurrentUser();
+            if (result.success && result.user) {
+                currentUser = result.user;
+                currentUserId = result.user.id;
+                const email = result.user.email || '';
+                const firstLetter = email.charAt(0).toUpperCase();
+                document.getElementById('userName').textContent = email;
+                document.getElementById('userAvatar').textContent = firstLetter;
+                console.log('Пользователь загружен, ID:', currentUserId);
+            }
+        }
+        
+        async function loadDocuments() {
+            if (!currentUserId) {
+                console.log('Нет user_id');
+                return;
+            }
+            
+            console.log('Загрузка документов для user_id:', currentUserId);
+            
+            const supabase = window.getSupabase();
+            
+            const { data, error } = await supabase
+                .from('user_documents_new')
+                .select('*')
+                .eq('user_id', currentUserId)
+                .maybeSingle();
+            
+            if (error) {
+                console.error('Ошибка загрузки:', error);
+                return;
+            }
+            
+            if (data) {
+                console.log('Найдены документы:', data);
+                
+                if (data.passport_series) document.getElementById('passportSeries').value = data.passport_series;
+                if (data.passport_number) document.getElementById('passportNumber').value = data.passport_number;
+                if (data.passport_issued) document.getElementById('passportIssued').value = data.passport_issued;
+                if (data.passport_date) document.getElementById('passportDate').value = data.passport_date;
+                if (data.passport_code) document.getElementById('passportCode').value = data.passport_code;
+                if (data.passport_birthplace) document.getElementById('passportBirthplace').value = data.passport_birthplace;
+                if (data.passport_address) document.getElementById('passportAddress').value = data.passport_address;
+                
+                const passportStatus = document.getElementById('passportStatus');
+                passportStatus.className = 'status-badge-bank status-approved';
+                passportStatus.textContent = 'Заполнен';
+                
+                if (data.snils_number) document.getElementById('snilsNumber').value = data.snils_number;
+                
+                const snilsStatus = document.getElementById('snilsStatus');
+                snilsStatus.className = 'status-badge-bank status-approved';
+                snilsStatus.textContent = 'Заполнен';
+            }
+        }
+        
+        window.savePassport = async function() {
+            if (!currentUserId) {
+                alert('Необходимо авторизоваться');
+                return;
+            }
+            
+            const passportData = {
+                passport_series: document.getElementById('passportSeries').value,
+                passport_number: document.getElementById('passportNumber').value,
+                passport_issued: document.getElementById('passportIssued').value,
+                passport_date: document.getElementById('passportDate').value,
+                passport_code: document.getElementById('passportCode').value,
+                passport_birthplace: document.getElementById('passportBirthplace').value,
+                passport_address: document.getElementById('passportAddress').value
+            };
+            
+            if (!passportData.passport_series || !passportData.passport_number) {
+                alert('Заполните серию и номер паспорта');
+                return;
+            }
+            
+            console.log('Сохраняем паспорт для user_id:', currentUserId);
+            
+            const supabase = window.getSupabase();
+            
+            const { data: existing } = await supabase
+                .from('user_documents_new')
+                .select('id')
+                .eq('user_id', currentUserId)
+                .maybeSingle();
+            
+            let result;
+            if (existing) {
+                result = await supabase
+                    .from('user_documents_new')
+                    .update({
+                        ...passportData,
+                        updated_at: new Date()
+                    })
+                    .eq('user_id', currentUserId);
+            } else {
+                result = await supabase
+                    .from('user_documents_new')
+                    .insert([{
+                        user_id: currentUserId,
+                        ...passportData,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    }]);
+            }
+            
+            if (result.error) {
+                console.error('Ошибка сохранения:', result.error);
+                alert('Ошибка: ' + result.error.message);
+            } else {
+                console.log('Паспорт сохранён');
+                const statusEl = document.getElementById('passportStatus');
+                statusEl.className = 'status-badge-bank status-approved';
+                statusEl.textContent = 'Заполнен';
+                alert('Паспорт сохранен!');
+            }
+        };
+        
+        window.saveSnils = async function() {
+            if (!currentUserId) {
+                alert('Необходимо авторизоваться');
+                return;
+            }
+            
+            const snilsNumber = document.getElementById('snilsNumber').value;
+            
+            if (!snilsNumber) {
+                alert('Введите номер СНИЛС');
+                return;
+            }
+            
+            console.log('Сохраняем СНИЛС для user_id:', currentUserId);
+            
+            const supabase = window.getSupabase();
+            
+            const { data: existing } = await supabase
+                .from('user_documents_new')
+                .select('id')
+                .eq('user_id', currentUserId)
+                .maybeSingle();
+            
+            let result;
+            if (existing) {
+                result = await supabase
+                    .from('user_documents_new')
+                    .update({
+                        snils_number: snilsNumber,
+                        updated_at: new Date()
+                    })
+                    .eq('user_id', currentUserId);
+            } else {
+                result = await supabase
+                    .from('user_documents_new')
+                    .insert([{
+                        user_id: currentUserId,
+                        snils_number: snilsNumber,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    }]);
+            }
+            
+            if (result.error) {
+                console.error('Ошибка сохранения:', result.error);
+                alert('Ошибка: ' + result.error.message);
+            } else {
+                console.log('СНИЛС сохранён');
+                const statusEl = document.getElementById('snilsStatus');
+                statusEl.className = 'status-badge-bank status-approved';
+                statusEl.textContent = 'Заполнен';
+                alert('СНИЛС сохранен!');
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserInfo();
+            await loadDocuments();
+        });
+        
+        document.getElementById('userCard').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+    </script>
+</body>
+</html>

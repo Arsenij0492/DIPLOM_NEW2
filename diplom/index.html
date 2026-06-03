@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кубань Кредит | Сельская ипотека</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Дополнительные стили для улучшения */
+        .quiz-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 40px;
+        }
+        .quiz-footer .btn {
+            flex: 1;
+        }
+        .agreement-card {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f7ff;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .agreement-card:hover {
+            background: #e5f0ff;
+            transform: translateY(-2px);
+        }
+        .agreement-card .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .agreement-card input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #0047AB;
+        }
+        .agreement-card .benefit-content {
+            flex: 1;
+        }
+        .agreement-card .benefit-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a2b3e;
+        }
+        .agreement-card .benefit-desc {
+            font-size: 13px;
+            color: #6c7a8e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card">
+            <!-- Левая панель -->
+            <div class="panel-left">
+                <div class="logo">
+                    <h1>Кубань Кредит</h1>
+                    <p>Сельская ипотека с господдержкой</p>
+                </div>
+                
+                <div class="quote-block">
+                    <blockquote>
+                        Переезд в собственный дом ближе к природе
+                    </blockquote>
+                    <cite>— программа действует во всех регионах России</cite>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">до 6 млн ₽</div>
+                        <div class="stat-label">сумма кредита</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">от 2.5%</div>
+                        <div class="stat-label">годовых</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">до 25 лет</div>
+                        <div class="stat-label">срок</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Правая панель с опросником -->
+            <div class="panel-right">
+                <div class="panel-header">
+                    <div class="step-indicator">шаг <span id="current-step">1</span> из 4</div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-step active" id="progress-1"></div>
+                        <div class="progress-step" id="progress-2"></div>
+                        <div class="progress-step" id="progress-3"></div>
+                        <div class="progress-step" id="progress-4"></div>
+                    </div>
+                </div>
+                
+                <div class="questions-container">
+                    <!-- Вопрос 1: Имя -->
+                    <div class="question active" id="question-1">
+                        <h2>Как к вам обращаться?</h2>
+                        <p class="question-description">Чтобы подготовить персональное предложение</p>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Ваше имя *</label>
+                                <input type="text" class="form-control" id="first-name" placeholder="Александр" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Фамилия (необязательно)</label>
+                                <input type="text" class="form-control" id="last-name" placeholder="Иванов">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Вопрос 2: Что ищете -->
+                    <div class="question" id="question-2">
+                        <h2>Что планируете приобрести?</h2>
+                        <p class="question-description">Выберите один вариант</p>
+                        
+                        <div class="radio-group">
+                            <label class="radio-card">
+                                <input type="radio" name="property-type" value="land">
+                                <span class="radio-content">
+                                    <span class="radio-title">Земельный участок</span>
+                                    <span class="radio-subtitle">под строительство дома</span>
+                                </span>
+                            </label>
+                            
+                            <label class="radio-card">
+                                <input type="radio" name="property-type" value="house">
+                                <span class="radio-content">
+                                    <span class="radio-title">Дом с участком</span>
+                                    <span class="radio-subtitle">готовое жильё</span>
+                                </span>
+                            </label>
+                            
+                            <label class="radio-card">
+                                <input type="radio" name="property-type" value="townhouse">
+                                <span class="radio-content">
+                                    <span class="radio-title">Таунхаус</span>
+                                    <span class="radio-subtitle">формат загородной жизни</span>
+                                </span>
+                            </label>
+                            
+                            <label class="radio-card">
+                                <input type="radio" name="property-type" value="apartment">
+                                <span class="radio-content">
+                                    <span class="radio-title">Квартира</span>
+                                    <span class="radio-subtitle">в малоэтажном доме</span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Вопрос 3: Льготы -->
+                    <div class="question" id="question-3">
+                        <h2>Есть ли у вас льготы?</h2>
+                        <p class="question-description">Это влияет на условия кредита</p>
+                        
+                        <div class="benefits-grid">
+                            <label class="benefit-item">
+                                <input type="checkbox" value="family" id="benefit-family">
+                                <span class="benefit-content">
+                                    <span>
+                                        <span class="benefit-title">Семейная ипотека</span>
+                                        <span class="benefit-desc">есть дети до 6 лет</span>
+                                    </span>
+                                </span>
+                            </label>
+                            
+                            <label class="benefit-item">
+                                <input type="checkbox" value="it" id="benefit-it">
+                                <span class="benefit-content">
+                                    <span>
+                                        <span class="benefit-title">IT-ипотека</span>
+                                        <span class="benefit-desc">работаете в IT</span>
+                                    </span>
+                                </span>
+                            </label>
+                            
+                            <label class="benefit-item">
+                                <input type="checkbox" value="agro" id="benefit-agro">
+                                <span class="benefit-content">
+                                    <span>
+                                        <span class="benefit-title">АПК / сельское хозяйство</span>
+                                        <span class="benefit-desc">работник АПК</span>
+                                    </span>
+                                </span>
+                            </label>
+                            
+                            <label class="benefit-item">
+                                <input type="checkbox" value="social" id="benefit-social">
+                                <span class="benefit-content">
+                                    <span>
+                                        <span class="benefit-title">Социальная сфера</span>
+                                        <span class="benefit-desc">учитель, врач, соцработник</span>
+                                    </span>
+                                </span>
+                            </label>
+                            
+                            <label class="benefit-item">
+                                <input type="checkbox" value="svo" id="benefit-svo">
+                                <span class="benefit-content">
+                                    <span>
+                                        <span class="benefit-title">Участник СВО</span>
+                                        <span class="benefit-desc">и члены семьи</span>
+                                    </span>
+                                </span>
+                            </label>
+                            
+                            <label class="benefit-item">
+                                <input type="checkbox" value="none" id="benefit-none">
+                                <span class="benefit-content">
+                                    <span>
+                                        <span class="benefit-title">Нет льгот</span>
+                                        <span class="benefit-desc">базовая программа</span>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Вопрос 4: Контакты -->
+                    <div class="question" id="question-4">
+                        <h2>Куда отправить результат?</h2>
+                        <p class="question-description">Мы подберем программу и пришлем условия</p>
+                        
+                        <div class="contact-form">
+                            <div class="form-group">
+                                <label>Электронная почта</label>
+                                <input type="email" class="form-control" id="email" placeholder="ivanov@mail.ru">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Телефон</label>
+                                <input type="tel" class="form-control" id="phone" placeholder="+7 (___) ___-__-__">
+                            </div>
+                        </div>
+                        
+                        <!-- КРАСИВАЯ КНОПКА СОГЛАСИЯ -->
+                        <div class="agreement-card" onclick="document.getElementById('agree').click()">
+                            <label class="benefit-item" style="cursor: pointer;">
+                                <input type="checkbox" id="agree" checked style="width: 22px; height: 22px;">
+                                <span class="benefit-content">
+                                    <span>
+                                        <span class="benefit-title">✅ Согласие на обработку персональных данных</span>
+                                        <span class="benefit-desc">Я принимаю условия политики конфиденциальности и даю согласие на обработку моих данных</span>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quiz-footer">
+                    <button class="btn btn-secondary" id="prevBtn" style="display: none;">← Назад</button>
+                    <button class="btn btn-primary" id="nextBtn">Продолжить →</button>
+                    <button class="btn btn-success" id="submitBtn" style="display: none;">Получить предложение</button>
+                    <button class="btn btn-outline" id="loginBtn" style="display: none;">Войти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/error-handler.js"></script>
+    <script src="js/quiz.js"></script>
+    <script>
+        // Дополнительная инициализация для кнопки входа на 1 шаге
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.onclick = function() {
+                    window.location.href = 'login.html';
+                };
+            }
+        });
+    </script>
+</body>
+</html>

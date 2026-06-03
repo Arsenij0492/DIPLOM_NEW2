@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h2>Кубань Кредит</h2>
+                    <span class="badge">Администратор</span>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-info">
+                        <span class="user-name"></span>
+                        <span class="user-role">Администратор</span>
+                    </div>
+                    <button class="btn btn-outline btn-sm logout-btn">Выход</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="total-applications">0</div>
+                <div class="stat-label">Всего заявок</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="pending-applications">0</div>
+                <div class="stat-label">На рассмотрении</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="approved-applications">0</div>
+                <div class="stat-label">Одобрено</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="rejected-applications">0</div>
+                <div class="stat-label">Отказано</div>
+            </div>
+        </div>
+        
+        <div class="filters-bar">
+            <div class="filter-group">
+                <label>Статус:</label>
+                <select id="status-filter" class="form-control" onchange="filterApplications()">
+                    <option value="all">Все статусы</option>
+                    <option value="submitted">На рассмотрении</option>
+                    <option value="documents_check">Проверка документов</option>
+                    <option value="approved">Одобренные</option>
+                    <option value="rejected">Отказанные</option>
+                    <option value="need_docs">Требуют документы</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Поиск:</label>
+                <input type="text" id="search-input" class="form-control" placeholder="Email или ФИО клиента" oninput="filterApplications()">
+            </div>
+        </div>
+        
+        <div class="applications-list">
+            <h2>Управление заявками</h2>
+            <div id="applications-container">
+                <div class="loading">Загрузка заявок...</div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/error-handler.js"></script>
+    
+    <div id="offline-banner" class="offline-banner" style="display: none;">
+        ⚠️ Нет соединения с сервером. Данные могут быть неактуальны.
+    </div>
+    
+    <script>
+        let allApplications = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            await Loader.withLoader(async () => {
+                const userResult = await window.getCurrentUser();
+                if (userResult.success && userResult.user) {
+                    if (userResult.user.profile?.role !== 'admin') {
+                        window.location.href = 'dashboard.html';
+                    }
+                    await loadAllApplications();
+                }
+            }, 'Загрузка данных...');
+        });
+        
+        async function loadAllApplications() {
+            const container = document.getElementById('applications-container');
+            
+            const result = await window.getAllApplications();
+            
+            if (result.success && result.applications) {
+                allApplications = result.applications;
+                updateStatistics();
+                displayApplications(allApplications);
+            } else {
+                container.innerHTML = `
+                    <div class="error-state">
+                        <p>Ошибка при загрузке заявок</p>
+                        <button onclick="loadAllApplications()" class="btn btn-primary">Повторить</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function updateStatistics() {
+            document.getElementById('total-applications').textContent = allApplications.length;
+            document.getElementById('pending-applications').textContent = 
+                allApplications.filter(app => app.status === 'submitted' || app.status === 'documents_check').length;
+            document.getElementById('approved-applications').textContent = 
+                allApplications.filter(app => app.status === 'approved').length;
+            document.getElementById('rejected-applications').textContent = 
+                allApplications.filter(app => app.status === 'rejected').length;
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ru-RU', {
+                style: 'currency',
+                currency: 'RUB',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        function displayApplications(applications) {
+            const container = document.getElementById('applications-container');
+            
+            if (applications.length === 0) {
+                container.innerHTML = '<div class="empty-state">Заявок не найдено</div>';
+                return;
+            }
+            
+            let html = '<div class="applications-table">';
+            html += `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Клиент</th>
+                            <th>Сумма</th>
+                            <th>Статус</th>
+                            <th>Дата</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            applications.forEach(app => {
+                const clientName = app.users ? 
+                    `${app.users.last_name} ${app.users.first_name}` : 
+                    'Неизвестно';
+                const status = window.APP_CONFIG?.applicationStatuses[app.status] || app.status;
+                const statusClass = getStatusClass(app.status);
+                
+                html += `
+                    <tr>
+                        <td>#${app.id.slice(0,8)}</td>
+                        <td>${clientName}<br><small>${app.users?.email || ''}</small></td>
+                        <td>${formatCurrency(app.property_price)}</td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        <td>${new Date(app.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <a href="admin-application.html?id=${app.id}" class="btn btn-primary btn-sm">Управлять</a>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        function filterApplications() {
+            const statusFilter = document.getElementById('status-filter').value;
+            const searchFilter = document.getElementById('search-input').value.toLowerCase();
+            
+            let filtered = [...allApplications];
+            
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(app => app.status === statusFilter);
+            }
+            
+            if (searchFilter) {
+                filtered = filtered.filter(app => {
+                    const client = app.users;
+                    if (!client) return false;
+                    
+                    const fullName = `${client.last_name} ${client.first_name} ${client.middle_name || ''}`.toLowerCase();
+                    const email = client.email?.toLowerCase() || '';
+                    
+                    return fullName.includes(searchFilter) || email.includes(searchFilter);
+                });
+            }
+            
+            displayApplications(filtered);
+        }
+        
+        function getStatusClass(status) {
+            const classes = {
+                draft: 'status-draft',
+                submitted: 'status-submitted',
+                documents_check: 'status-documents',
+                approved: 'status-approved',
+                rejected: 'status-rejected',
+                need_docs: 'status-need-docs'
+            };
+            return classes[status] || 'status-default';
+        }
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled rejection:', event.reason);
+            Loader.hide();
+        });
+    </script>
+</body>
+</html>

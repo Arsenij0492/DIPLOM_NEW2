@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/bank-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .skeleton {
+            background: linear-gradient(90deg, #f0f2f5 25%, #e0e4e8 50%, #f0f2f5 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .stat-skeleton { height: 80px; border-radius: 20px; }
+        .doc-skeleton { height: 200px; border-radius: 24px; }
+        .user-card { cursor: pointer; display: flex; align-items: center; gap: 8px; background: white; padding: 4px 12px 4px 8px; border-radius: 40px; border: 1px solid #e0e4e8; }
+        .user-card:hover { background: #f0f2f5; }
+        .btn-gosuslugi { background: #0066FF; color: white; padding: 8px 16px; border-radius: 100px; font-weight: 500; font-size: 13px; border: none; cursor: pointer; }
+        .btn-chat {
+            background: linear-gradient(135deg, #0047AB, #0052CC);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-weight: 500;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-chat:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,71,171,0.3);
+        }
+        .bank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .logo-area h1 { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #0047AB, #0052CC); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+        .logo-area p { font-size: 12px; color: #6c7a8e; }
+        .header-actions { display: flex; align-items: center; gap: 12px; }
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+        .stat-card-bank { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .stat-number { font-size: 32px; font-weight: 800; color: #0047AB; }
+        .stat-label-bank { font-size: 13px; color: #6c7a8e; }
+        .documents-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 48px; }
+        .document-card-bank { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); }
+        .document-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge-bank { padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+        .status-pending { background: #FFF3E0; color: #E65100; }
+        .status-approved { background: #E8F5E9; color: #2E7D32; }
+        .btn-outline-bank { background: transparent; border: 1px solid #e0e4e8; padding: 8px 16px; border-radius: 100px; font-weight: 500; cursor: pointer; color: #1a1f36; text-decoration: none; display: inline-block; }
+        .btn-primary-bank { background: linear-gradient(135deg, #0047AB, #0052CC); color: white; padding: 10px 24px; border-radius: 100px; font-weight: 600; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+        .applications-section { margin-top: 40px; }
+        .section-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; }
+        .applications-grid-bank { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .application-item { background: white; border-radius: 20px; padding: 20px; border: 1px solid #f0f2f5; }
+        .app-row { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f2f5; }
+        .app-label { font-size: 13px; color: #6c7a8e; }
+        .app-value { font-weight: 600; font-size: 14px; }
+        .empty-state-bank { background: white; border-radius: 24px; padding: 60px; text-align: center; color: #6c7a8e; }
+        .bank-container { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+        
+        /* Чат */
+        .chat-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            z-index: 999;
+            display: none;
+        }
+        .chat-overlay.active { display: block; }
+        .chat-panel {
+            position: fixed;
+            top: 0;
+            right: -450px;
+            width: 450px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid rgba(0,0,0,0.05);
+        }
+        .chat-panel.open { right: 0; }
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e0e4e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        .chat-header h3 { font-size: 18px; color: #1a1f36; }
+        .chat-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6c7a8e;
+            transition: all 0.2s;
+        }
+        .chat-close:hover { color: #1a1f36; }
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .message-bot {
+            background: #f0f2f5;
+            color: #1a1f36;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        .message-user {
+            background: linear-gradient(135deg, #0047AB, #0052CC);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-input-area {
+            padding: 16px 20px;
+            border-top: 1px solid #e0e4e8;
+            display: flex;
+            gap: 12px;
+            background: white;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e0e4e8;
+            border-radius: 40px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .chat-input:focus {
+            outline: none;
+            border-color: #0047AB;
+        }
+        .chat-send {
+            background: #0047AB;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chat-send:hover { background: #0052CC; }
+        
+        @media (max-width: 600px) {
+            .chat-panel { width: 100%; right: -100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bank-container">
+        <div class="bank-header">
+            <div class="logo-area">
+                <h1>Кубань Кредит</h1>
+                <p>Сельская ипотека</p>
+            </div>
+            <div class="header-actions">
+                <div class="user-card" id="userCard">
+                    <div class="user-avatar" id="userAvatar" style="width: 28px; height: 28px; background: linear-gradient(135deg, #0047AB, #0052CC); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px;">?</div>
+                    <div class="user-info-header">
+                        <div class="user-name-header" id="userName" style="font-weight: 500; font-size: 12px; color: #1a1f36; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Загрузка...</div>
+                        <div class="user-role-header" id="userRole" style="font-size: 9px; color: #6c7a8e;">Клиент</div>
+                    </div>
+                </div>
+                <button class="btn-gosuslugi" onclick="alert('Демо-режим: подключение к Госуслугам')">Госуслуги</button>
+                <button class="btn-chat" id="chatBtn">Чат</button>
+                <button class="btn-outline-bank" id="logoutBtn">Выход</button>
+            </div>
+        </div>
+
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card-bank"><div class="stat-skeleton"></div></div>
+            <div class="stat-card-bank"><div class="stat-skeleton"></div></div>
+            <div class="stat-card-bank"><div class="stat-skeleton"></div></div>
+            <div class="stat-card-bank"><div class="stat-skeleton"></div></div>
+        </div>
+
+        <div class="documents-grid" id="documentsGrid">
+            <div class="document-card-bank"><div class="doc-skeleton"></div></div>
+            <div class="document-card-bank"><div class="doc-skeleton"></div></div>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+            <a href="application-form.html" class="btn-primary-bank">+ Новая заявка</a>
+        </div>
+
+        <div class="applications-section">
+            <h2 class="section-title">Мои заявки</h2>
+            <div id="applicationsList">
+                <div class="skeleton" style="height: 150px; margin-bottom: 16px; border-radius: 20px;"></div>
+                <div class="skeleton" style="height: 150px; border-radius: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Чат -->
+    <div class="chat-overlay" id="chatOverlay"></div>
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <h3>💬 Чат со специалистом</h3>
+            <button class="chat-close" id="chatCloseBtn">×</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message message-bot">
+                Здравствуйте! Я кредитный специалист. Чем могу помочь?
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Введите сообщение...">
+            <button class="chat-send" id="chatSendBtn">Отправить</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/error-handler.js"></script>
+    
+    <script>
+        // Таймаут для промисов
+        function withTimeout(promise, ms = 5000) {
+            return Promise.race([
+                promise,
+                new Promise((resolve) => setTimeout(() => resolve(null), ms))
+            ]);
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ru-RU', {
+                style: 'currency',
+                currency: 'RUB',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        function getStatusName(status) {
+            const statuses = {
+                draft: 'Черновик',
+                submitted: 'На рассмотрении',
+                documents_check: 'Проверка документов',
+                approved: 'Одобрена',
+                rejected: 'Отказано',
+                need_docs: 'Требуются документы'
+            };
+            return statuses[status] || status;
+        }
+        
+        let currentUser = null;
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userResult = await window.getCurrentUser();
+            
+            if (!userResult.success || !userResult.user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = userResult.user;
+            const email = currentUser.email || '';
+            const firstLetter = email.charAt(0).toUpperCase();
+            document.getElementById('userName').textContent = email;
+            document.getElementById('userAvatar').textContent = firstLetter;
+            
+            document.getElementById('userCard').addEventListener('click', () => {
+                window.location.href = 'profile.html';
+            });
+            
+            await Promise.all([
+                loadStatistics(),
+                loadDocuments(),
+                loadApplications()
+            ]);
+        });
+        
+        async function loadStatistics() {
+            try {
+                const result = await withTimeout(window.getUserApplications(), 5000);
+                if (result && result.success && result.applications) {
+                    const apps = result.applications;
+                    document.getElementById('statsRow').innerHTML = `
+                        <div class="stat-card-bank">
+                            <div class="stat-number">${apps.length}</div>
+                            <div class="stat-label-bank">Всего заявок</div>
+                        </div>
+                        <div class="stat-card-bank">
+                            <div class="stat-number">${apps.filter(a => a.status === 'submitted' || a.status === 'documents_check').length}</div>
+                            <div class="stat-label-bank">В работе</div>
+                        </div>
+                        <div class="stat-card-bank">
+                            <div class="stat-number">${apps.filter(a => a.status === 'approved').length}</div>
+                            <div class="stat-label-bank">Одобрено</div>
+                        </div>
+                        <div class="stat-card-bank">
+                            <div class="stat-number">${apps.filter(a => a.status === 'draft').length}</div>
+                            <div class="stat-label-bank">Черновики</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Stats error:', error);
+            }
+        }
+        
+        async function loadDocuments() {
+            try {
+                const supabase = window.getSupabase();
+                if (!supabase) return;
+                
+                const passportPromise = supabase
+                    .from('user_documents')
+                    .select('document_data')
+                    .eq('user_id', currentUser.id)
+                    .eq('document_type', 'passport')
+                    .maybeSingle();
+                
+                const snilsPromise = supabase
+                    .from('user_documents')
+                    .select('document_data')
+                    .eq('user_id', currentUser.id)
+                    .eq('document_type', 'snils')
+                    .maybeSingle();
+                
+                const passportRes = await withTimeout(passportPromise, 5000);
+                const snilsRes = await withTimeout(snilsPromise, 5000);
+                
+                let passportHtml = '<div class="document-card-bank"><div class="document-title">Паспорт РФ<span class="status-badge-bank status-pending">Не заполнен</span></div><div>Данные не заполнены</div><a href="profile.html" class="btn-outline-bank" style="margin-top: 16px;">Заполнить</a></div>';
+                let snilsHtml = '<div class="document-card-bank"><div class="document-title">СНИЛС<span class="status-badge-bank status-pending">Не заполнен</span></div><div>Данные не заполнены</div><a href="profile.html" class="btn-outline-bank" style="margin-top: 16px;">Заполнить</a></div>';
+                
+                if (passportRes && passportRes.data) {
+                    const d = passportRes.data.document_data;
+                    passportHtml = `<div class="document-card-bank"><div class="document-title">Паспорт РФ<span class="status-badge-bank status-approved">Заполнен</span></div><div>Серия/номер: ${d.series || ''} ${d.number || ''}</div><a href="profile.html" class="btn-outline-bank" style="margin-top: 16px;">Редактировать</a></div>`;
+                }
+                
+                if (snilsRes && snilsRes.data) {
+                    const d = snilsRes.data.document_data;
+                    snilsHtml = `<div class="document-card-bank"><div class="document-title">СНИЛС<span class="status-badge-bank status-approved">Заполнен</span></div><div>Номер: ${d.number || ''}</div><a href="profile.html" class="btn-outline-bank" style="margin-top: 16px;">Редактировать</a></div>`;
+                }
+                
+                document.getElementById('documentsGrid').innerHTML = passportHtml + snilsHtml;
+            } catch (error) {
+                console.error('Documents error:', error);
+            }
+        }
+        
+        async function loadApplications() {
+            try {
+                const result = await withTimeout(window.getUserApplications(), 5000);
+                const container = document.getElementById('applicationsList');
+                
+                if (result && result.success && result.applications && result.applications.length > 0) {
+                    const apps = result.applications;
+                    let html = '<div class="applications-grid-bank">';
+                    
+                    apps.forEach(app => {
+                        html += `
+                            <div class="application-item">
+                                <div class="app-row">
+                                    <span class="app-label">Сумма</span>
+                                    <span class="app-value">${formatCurrency(app.property_price)}</span>
+                                </div>
+                                <div class="app-row">
+                                    <span class="app-label">Первоначальный взнос</span>
+                                    <span class="app-value">${formatCurrency(app.down_payment)}</span>
+                                </div>
+                                <div class="app-row">
+                                    <span class="app-label">Срок</span>
+                                    <span class="app-value">${app.loan_term} лет</span>
+                                </div>
+                                <div class="app-row">
+                                    <span class="app-label">Статус</span>
+                                    <span class="app-value" style="color: #0047AB;">${getStatusName(app.status)}</span>
+                                </div>
+                                <div style="margin-top: 16px; display: flex; gap: 12px;">
+                                    <a href="application-details.html?id=${app.id}" class="btn-outline-bank" style="flex:1; text-align:center;">Подробнее</a>
+                                    ${app.status === 'draft' ? `
+                                        <button class="btn-primary-bank" style="flex:1;" onclick="submitApp('${app.id}')">Отправить</button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div class="empty-state-bank"><p>У вас пока нет заявок</p><a href="application-form.html" class="btn-primary-bank" style="display: inline-block; margin-top: 16px;">Создать заявку</a></div>`;
+                }
+            } catch (error) {
+                console.error('Applications error:', error);
+            }
+        }
+        
+        window.submitApp = async (id) => {
+            if (!confirm('Отправить заявку на проверку?')) return;
+            try {
+                await window.updateApplicationStatus(id, 'submitted', 'Заявка отправлена');
+                location.reload();
+            } catch (error) {
+                alert('Ошибка при отправке');
+            }
+        };
+        
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await window.logoutUser();
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        });
+        
+        // ========== ЧАТ ==========
+        const chatBtn = document.getElementById('chatBtn');
+        const chatPanel = document.getElementById('chatPanel');
+        const chatOverlay = document.getElementById('chatOverlay');
+        const chatCloseBtn = document.getElementById('chatCloseBtn');
+        const chatSendBtn = document.getElementById('chatSendBtn');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+        
+        function openChat() {
+            chatPanel.classList.add('open');
+            chatOverlay.classList.add('active');
+        }
+        
+        function closeChat() {
+            chatPanel.classList.remove('open');
+            chatOverlay.classList.remove('active');
+        }
+        
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+            
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'message message-user';
+            userMsgDiv.textContent = message;
+            chatMessages.appendChild(userMsgDiv);
+            
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            setTimeout(() => {
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'message message-bot';
+                botMsgDiv.textContent = 'Спасибо за вопрос! Наш специалист свяжется с вами в ближайшее время.';
+                chatMessages.appendChild(botMsgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 800);
+        }
+        
+        if (chatBtn) chatBtn.addEventListener('click', openChat);
+        if (chatCloseBtn) chatCloseBtn.addEventListener('click', closeChat);
+        if (chatOverlay) chatOverlay.addEventListener('click', closeChat);
+        if (chatSendBtn) chatSendBtn.addEventListener('click', sendMessage);
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+        }
+    </script>
+    <!-- В конец dashboard.html, перед </body> -->
+<div class="chat-overlay" id="chatOverlay"></div>
+<div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+        <h3>💬 Чат со специалистом</h3>
+        <button class="chat-close" id="chatCloseBtn">×</button>
+    </div>
+    <div class="chat-messages-client" id="chatMessages">
+        <div class="message message-bot">Загрузка сообщений...</div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Введите сообщение...">
+        <button class="chat-send" id="chatSendBtn">Отправить</button>
+    </div>
+</div>
+
+<script>
+// Функция загрузки сообщений для клиента
+async function loadClientMessages() {
+    const user = await window.getCurrentUser();
+    if (!user.user) return;
+    
+    const supabase = window.getSupabase();
+    const { data: messages } = await supabase
+        .from('admin_messages')
+        .select('*')
+        .eq('user_id', user.user.id)
+        .order('created_at', { ascending: true });
+    
+    const container = document.getElementById('chatMessages');
+    if (container && messages) {
+        if (messages.length === 0) {
+            container.innerHTML = '<div class="message message-bot">👋 Здравствуйте! Задайте вопрос специалисту.</div>';
+        } else {
+            container.innerHTML = messages.map(m => `
+                <div class="message ${m.from_admin ? 'message-bot' : 'message-user'}">
+                    ${m.message}
+                    <div style="font-size: 10px; opacity: 0.6; margin-top: 4px;">${new Date(m.created_at).toLocaleTimeString()}</div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+}
+
+// Отправка сообщения от клиента
+async function sendClientMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    const user = await window.getCurrentUser();
+    if (!user.user) return;
+    
+    const supabase = window.getSupabase();
+    await supabase.from('admin_messages').insert([{
+        user_id: user.user.id,
+        message: message,
+        from_admin: false,
+        created_at: new Date()
+    }]);
+    
+    input.value = '';
+    await loadClientMessages();
+}
+
+// Подключаем чат к кнопке
+document.getElementById('chatBtn')?.addEventListener('click', () => {
+    document.getElementById('chatPanel').classList.add('open');
+    document.getElementById('chatOverlay').classList.add('active');
+    loadClientMessages();
+});
+
+document.getElementById('chatCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('chatPanel').classList.remove('open');
+    document.getElementById('chatOverlay').classList.remove('active');
+});
+
+document.getElementById('chatOverlay')?.addEventListener('click', () => {
+    document.getElementById('chatPanel').classList.remove('open');
+    document.getElementById('chatOverlay').classList.remove('active');
+});
+
+document.getElementById('chatSendBtn')?.addEventListener('click', sendClientMessage);
+document.getElementById('chatInput')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendClientMessage();
+});
+
+// Проверяем новые сообщения каждые 5 секунд
+setInterval(() => {
+    if (document.getElementById('chatPanel')?.classList.contains('open')) {
+        loadClientMessages();
+    }
+}, 5000);
+</script>
+</body>
+</html>

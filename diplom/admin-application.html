@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление заявкой | Кубань Кредит</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h2>Кубань Кредит</h2>
+                    <span class="badge">Управление заявкой</span>
+                </div>
+                
+                <div class="header-right">
+                    <div class="user-info">
+                        <span class="user-name"></span>
+                        <span class="user-role">Администратор</span>
+                    </div>
+                    <a href="admin-dashboard.html" class="btn btn-secondary btn-sm">Назад</a>
+                    <button class="btn btn-outline btn-sm logout-btn">Выход</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <main class="container">
+        <div class="application-details">
+            <div class="details-header">
+                <div>
+                    <h1 class="text-gradient">Управление заявкой</h1>
+                    <p class="text-muted" id="application-id">ID: загрузка...</p>
+                </div>
+                <div id="status-container">
+                    <span class="status-badge" id="application-status">Загрузка...</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons" style="margin-bottom: 25px;">
+                <button class="btn btn-success" onclick="changeStatus('approved')">Одобрить</button>
+                <button class="btn btn-danger" onclick="changeStatus('rejected')">Отказать</button>
+                <button class="btn btn-warning" onclick="changeStatus('need_docs')">Запросить документы</button>
+                <button class="btn btn-primary" onclick="changeStatus('documents_check')">На проверку документов</button>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 30px;">
+                <label>Комментарий к решению:</label>
+                <textarea id="admin-comment" class="form-control" rows="3" placeholder="Укажите причину..."></textarea>
+            </div>
+            
+            <div class="details-grid">
+                <div class="details-card">
+                    <h3>Параметры кредита</h3>
+                    <div class="details-content" id="loan-details"></div>
+                </div>
+                
+                <div class="details-card">
+                    <h3>Объект недвижимости</h3>
+                    <div class="details-content" id="property-details"></div>
+                </div>
+            </div>
+            
+            <div class="details-card">
+                <h3>Документы в заявке</h3>
+                <div id="application-documents"></div>
+            </div>
+            
+            <div class="details-card">
+                <h3>История заявки</h3>
+                <div class="status-history" id="status-history"></div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/error-handler.js"></script>
+    
+    <div id="offline-banner" class="offline-banner" style="display: none;">
+        ⚠️ Нет соединения с сервером. Данные могут быть неактуальны.
+    </div>
+    
+    <script>
+        let applicationId = null;
+        let currentApplication = null;
+        
+        function getApplicationIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            await Loader.withLoader(async () => {
+                applicationId = getApplicationIdFromUrl();
+                
+                if (!applicationId) {
+                    alert('ID заявки не указан');
+                    window.location.href = 'admin-dashboard.html';
+                    return;
+                }
+                
+                const userResult = await window.getCurrentUser();
+                if (userResult.success && userResult.user) {
+                    if (userResult.user.profile?.role !== 'admin') {
+                        window.location.href = 'dashboard.html';
+                        return;
+                    }
+                    
+                    await loadApplicationDetails();
+                    await loadStatusHistory();
+                }
+            }, 'Загрузка данных заявки...');
+        });
+        
+        async function loadApplicationDetails() {
+            try {
+                const supabase = window.getSupabase();
+                
+                const { data, error } = await supabase
+                    .from('applications')
+                    .select('*, users:user_id(*)')
+                    .eq('id', applicationId)
+                    .single();
+                
+                if (error) throw error;
+                
+                currentApplication = data;
+                displayApplicationDetails();
+                
+            } catch (error) {
+                console.error('Error loading application:', error);
+                Loader.error('Ошибка загрузки');
+            }
+        }
+        
+        function displayApplicationDetails() {
+            document.getElementById('application-id').textContent = `ID: ${currentApplication.id}`;
+            
+            const statusElement = document.getElementById('application-status');
+            const status = window.APP_CONFIG?.applicationStatuses[currentApplication.status] || currentApplication.status;
+            statusElement.textContent = status;
+            statusElement.className = `status-badge ${getStatusClass(currentApplication.status)}`;
+            
+            document.getElementById('loan-details').innerHTML = `
+                <div class="detail-item">
+                    <span class="detail-label">Стоимость:</span>
+                    <span class="detail-value">${formatCurrency(currentApplication.property_price)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Первоначальный взнос:</span>
+                    <span class="detail-value">${formatCurrency(currentApplication.down_payment)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Сумма кредита:</span>
+                    <span class="detail-value text-primary">${formatCurrency(currentApplication.property_price - currentApplication.down_payment)}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Срок:</span>
+                    <span class="detail-value">${currentApplication.loan_term} лет</span>
+                </div>
+            `;
+            
+            document.getElementById('property-details').innerHTML = `
+                <div class="detail-item">
+                    <span class="detail-label">Регион:</span>
+                    <span class="detail-value">${currentApplication.region || 'Не указан'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Адрес:</span>
+                    <span class="detail-value">${currentApplication.property_address || 'Не указан'}</span>
+                </div>
+            `;
+            
+            displayApplicationDocuments();
+        }
+        
+        function displayApplicationDocuments() {
+            const docs = currentApplication.documents || {};
+            const container = document.getElementById('application-documents');
+            
+            let html = '';
+            
+            if (docs.passport && Object.values(docs.passport).some(v => v)) {
+                html += `
+                    <div class="document-view">
+                        <h4>Паспорт РФ</h4>
+                        <div class="document-row">
+                            <span class="document-label">Серия/номер:</span>
+                            <span class="document-value">${docs.passport.series || ''} ${docs.passport.number || ''}</span>
+                        </div>
+                        <div class="document-row">
+                            <span class="document-label">Кем выдан:</span>
+                            <span class="document-value">${docs.passport.issued || ''}</span>
+                        </div>
+                        <div class="document-row">
+                            <span class="document-label">Дата выдачи:</span>
+                            <span class="document-value">${docs.passport.date || ''}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (docs.snils && docs.snils.number) {
+                html += `
+                    <div class="document-view">
+                        <h4>СНИЛС</h4>
+                        <div class="document-row">
+                            <span class="document-label">Номер:</span>
+                            <span class="document-value">${docs.snils.number}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html || '<p class="text-muted">Документы не загружены</p>';
+        }
+        
+        async function loadStatusHistory() {
+            try {
+                const supabase = window.getSupabase();
+                
+                const { data, error } = await supabase
+                    .from('status_history')
+                    .select('*')
+                    .eq('application_id', applicationId)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('status-history');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p class="text-muted">История изменений отсутствует</p>';
+                    return;
+                }
+                
+                let html = '<div class="history-timeline">';
+                
+                data.forEach(item => {
+                    html += `
+                        <div class="history-item">
+                            <div class="history-date">${new Date(item.created_at).toLocaleString()}</div>
+                            <div class="history-content">
+                                <div class="history-status">${item.new_status}</div>
+                                ${item.comment ? `<p class="history-comment">${item.comment}</p>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+                
+            } catch (error) {
+                document.getElementById('status-history').innerHTML = '<p class="text-muted">История недоступна</p>';
+            }
+        }
+        
+        async function changeStatus(newStatus) {
+            const comment = document.getElementById('admin-comment').value;
+            
+            let statusText = '';
+            if (newStatus === 'approved') statusText = 'одобрить';
+            if (newStatus === 'rejected') statusText = 'отклонить';
+            if (newStatus === 'need_docs') statusText = 'запросить документы';
+            if (newStatus === 'documents_check') statusText = 'отправить на проверку документов';
+            
+            if (!confirm(`Вы уверены, что хотите ${statusText} эту заявку?`)) return;
+            
+            await Loader.withLoader(async () => {
+                const result = await window.updateApplicationStatus(applicationId, newStatus, comment);
+                
+                if (result.success) {
+                    await loadApplicationDetails();
+                    await loadStatusHistory();
+                    document.getElementById('admin-comment').value = '';
+                    Loader.success('Статус обновлен!');
+                } else {
+                    throw new Error(result.error);
+                }
+            }, 'Обновление статуса...');
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ru-RU', {
+                style: 'currency',
+                currency: 'RUB',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+        
+        function getStatusClass(status) {
+            const classes = {
+                draft: 'status-draft',
+                submitted: 'status-submitted',
+                documents_check: 'status-documents',
+                approved: 'status-approved',
+                rejected: 'status-rejected',
+                need_docs: 'status-need-docs'
+            };
+            return classes[status] || 'status-default';
+        }
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled rejection:', event.reason);
+            Loader.hide();
+        });
+    </script>
+</body>
+</html>
